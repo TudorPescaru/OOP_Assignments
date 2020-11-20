@@ -1,5 +1,7 @@
 package entities;
 
+import entertainment.Season;
+
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -24,9 +26,13 @@ public final class User {
      */
     private ArrayList<Video> favorites;
     /**
-     * User's list of rated movies and tv shows
+     * User's list of rated movies
      */
-    private ArrayList<Video> rated;
+    private ArrayList<Movie> ratedMovies;
+    /**
+     * User's list of rated shows
+     */
+    private ArrayList<Season> ratedShows;
 
     public User(final String username, final String subscriptionType,
                 final Map<Video, Integer> history,
@@ -35,7 +41,8 @@ public final class User {
         this.subscriptionType = subscriptionType;
         this.history = history;
         this.favorites = favorites;
-        this.rated = new ArrayList<>();
+        this.ratedMovies = new ArrayList<>();
+        this.ratedShows = new ArrayList<>();
     }
 
     public String getUsername() {
@@ -54,27 +61,100 @@ public final class User {
         return favorites;
     }
 
+    public ArrayList<Movie> getRatedMovies() {
+        return ratedMovies;
+    }
+
+    public ArrayList<Season> getRatedShows() {
+        return ratedShows;
+    }
+
     /**
      * Add a viewed video (movie/tv show) to the user's favorites list
      * @param toFavorite video to add
+     * @return error or success message
      */
-    public void favoriteVideo(final Video toFavorite) {
-
+    public String favoriteVideo(final Video toFavorite) {
+        if (toFavorite == null) {
+            return "error -> Video is non existent";
+        }
+        if (this.history.containsKey(toFavorite)) {
+            if (!this.favorites.contains(toFavorite)) {
+                this.favorites.add(toFavorite);
+                return "success -> " + toFavorite.getTitle() + " was added as favourite";
+            } else {
+                return "error -> " + toFavorite.getTitle()
+                        + " is already in favourite list";
+            }
+        } else {
+            return "error -> " + toFavorite.getTitle() + " is not seen";
+        }
     }
 
     /**
      * Add a video (movie/tv show) to the user's history
      * @param toView video to add
+     * @return error or success message
      */
-    public void viewVideo(final Video toView) {
-
+    public String viewVideo(final Video toView) {
+        if (toView == null) {
+            return "error -> Video is non existent";
+        }
+        if (this.history.containsKey(toView)) {
+            this.history.put(toView, this.history.get(toView) + 1);
+            return "success -> " + toView.getTitle() + " was viewed with total views of "
+                    + this.history.get(toView);
+        } else {
+            this.history.put(toView, 1);
+            return "success -> " + toView.getTitle() + " was viewed with total views of 1";
+        }
     }
 
     /**
-     * Add a rating for a viewed video (movie/tv show season)
-     * @param toRate video to rate
+     * Add a rating for a viewed movie
+     * @param toRate movie to rate
+     * @param rating rating user wants to add
+     * @return error or success message
      */
-    public void rateVideo(final Video toRate) {
+    public String rateVideo(final Movie toRate, final Double rating) {
+        if (toRate == null) {
+            return "error -> Movie is non existent";
+        }
+        if (this.history.containsKey(toRate)) {
+            if (!this.ratedMovies.contains(toRate)) {
+                this.ratedMovies.add(toRate);
+                toRate.addRatind(rating);
+            } else {
+                return "error -> " + toRate.getTitle() + " is already rated";
+            }
+        } else {
+            return "error -> " + toRate.getTitle() + " is not seen";
+        }
+        return "error -> Movie is non existent";
+    }
 
+    /**
+     * Overloaded method for rating a show
+     * @param toRate show to rate
+     * @param seasonNumber number of season in rated show
+     * @param rating rating user wants to add
+     * @return error or success message
+     */
+    public String rateVideo(final Show toRate, final int seasonNumber, final Double rating) {
+        if (toRate == null) {
+            return "error -> Movie is non existent";
+        }
+        if (this.history.containsKey(toRate)) {
+            Season seasonToRate = toRate.getSeasons().get(seasonNumber);
+            if (!this.ratedShows.contains(seasonToRate)) {
+                this.ratedShows.add(seasonToRate);
+                toRate.addSeasonRating(seasonNumber, rating);
+            } else {
+                return "error -> " + toRate.getTitle() + " is already rated";
+            }
+        } else {
+            return "error -> " + toRate.getTitle() + " is not seen";
+        }
+        return "error -> Movie is non existent";
     }
 }

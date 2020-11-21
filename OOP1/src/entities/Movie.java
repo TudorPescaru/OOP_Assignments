@@ -22,7 +22,7 @@ public final class Movie extends Video {
     private Double averageRating;
 
     public Movie(final String title, final int year,
-                 final ArrayList<Actor> cast, final ArrayList<Genre> genres,
+                 final ArrayList<String> cast, final ArrayList<Genre> genres,
                  final int duration) {
         super(title, year, cast, genres);
         this.duration = duration;

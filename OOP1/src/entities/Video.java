@@ -19,14 +19,14 @@ public abstract class Video {
     /**
      * Video's list of actors starring
      */
-    private final ArrayList<Actor> cast;
+    private final ArrayList<String> cast;
     /**
      * Video's list of defining genres
      */
     private final ArrayList<Genre> genres;
 
     public Video(final String title, final int year,
-                 final ArrayList<Actor> cast, final ArrayList<Genre> genres) {
+                 final ArrayList<String> cast, final ArrayList<Genre> genres) {
         this.title = title;
         this.year = year;
         this.cast = cast;
@@ -41,7 +41,7 @@ public abstract class Video {
         return year;
     }
 
-    public final ArrayList<Actor> getCast() {
+    public final ArrayList<String> getCast() {
         return cast;
     }
 

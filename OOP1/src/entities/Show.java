@@ -28,12 +28,15 @@ public final class Show extends Video {
     private Double averageRating;
 
     public Show(final String title, final int year,
-                final ArrayList<Actor> cast, final ArrayList<Genre> genres,
+                final ArrayList<String> cast, final ArrayList<Genre> genres,
                 final int numberOfSeasons, final ArrayList<Season> seasons) {
         super(title, year, cast, genres);
         this.numberOfSeasons = numberOfSeasons;
         this.seasons = seasons;
         this.seasonAverageRatings = new ArrayList<>(numberOfSeasons);
+        for (int i = 0; i < numberOfSeasons; ++i) {
+            this.seasonAverageRatings.add(0.0);
+        }
         this.averageRating = 0.0;
     }
 

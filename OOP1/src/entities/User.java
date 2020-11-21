@@ -118,19 +118,21 @@ public final class User {
      */
     public String rateVideo(final Movie toRate, final Double rating) {
         if (toRate == null) {
-            return "error -> Movie is non existent";
+            return "error -> Movie is null";
         }
         if (this.history.containsKey(toRate)) {
+
             if (!this.ratedMovies.contains(toRate)) {
                 this.ratedMovies.add(toRate);
                 toRate.addRatind(rating);
+                return "success -> " + toRate.getTitle() + " was rated with " + rating + " by "
+                        + this.username;
             } else {
                 return "error -> " + toRate.getTitle() + " is already rated";
             }
         } else {
             return "error -> " + toRate.getTitle() + " is not seen";
         }
-        return "error -> Movie is non existent";
     }
 
     /**
@@ -142,19 +144,20 @@ public final class User {
      */
     public String rateVideo(final Show toRate, final int seasonNumber, final Double rating) {
         if (toRate == null) {
-            return "error -> Movie is non existent";
+            return "error -> Show is null";
         }
         if (this.history.containsKey(toRate)) {
-            Season seasonToRate = toRate.getSeasons().get(seasonNumber);
+            Season seasonToRate = toRate.getSeasons().get(seasonNumber - 1);
             if (!this.ratedShows.contains(seasonToRate)) {
                 this.ratedShows.add(seasonToRate);
-                toRate.addSeasonRating(seasonNumber, rating);
+                toRate.addSeasonRating(seasonNumber - 1, rating);
+                return "success -> " + toRate.getTitle() + " was rated with " + rating + " by "
+                        + this.username;
             } else {
                 return "error -> " + toRate.getTitle() + " is already rated";
             }
         } else {
             return "error -> " + toRate.getTitle() + " is not seen";
         }
-        return "error -> Movie is non existent";
     }
 }

@@ -27,9 +27,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.HashMap;
+import java.util.Comparator;
+import java.util.Collections;
 
 /**
  * The entry point to this homework. It runs the checker that tests your implementation.
@@ -170,6 +172,116 @@ public final class Main {
                     }
                     break;
                 case "query":
+                    switch (action.getObjectType()) {
+                        case "actors":
+                            switch (action.getCriteria()) {
+                                case "average":
+                                    int n = action.getNumber();
+                                    ArrayList<Actor> actorsToSort =
+                                            new ArrayList<>(actorsMap.values());
+                                    actorsToSort.sort(Comparator.comparingDouble(
+                                                        Actor::getFilmographyAverageRating).
+                                                        thenComparing(Actor::getName));
+                                    StringBuilder averageMessage =
+                                            new StringBuilder("Query result: [");
+                                    if (action.getSortType().equals("desc")) {
+                                        Collections.reverse(actorsToSort);
+                                    }
+                                    if (actorsToSort.size() >= n) {
+                                        for (int i = 0; i < n - 1; ++i) {
+                                            averageMessage.append(actorsToSort.get(i).getName());
+                                            averageMessage.append(", ");
+                                        }
+                                        averageMessage.append(actorsToSort.get(n - 1).getName());
+                                    } else {
+                                        for (int i = 0; i < actorsToSort.size() - 1; ++i) {
+                                            averageMessage.append(actorsToSort.get(i).getName());
+                                            averageMessage.append(", ");
+                                        }
+                                        averageMessage.append(actorsToSort.get(actorsToSort.size()
+                                                                                - 1).getName());
+                                    }
+                                    averageMessage.append("]");
+                                    resultObject = fileWriter.writeFile(action.getActionId(), "",
+                                                                        averageMessage.toString());
+                                    break;
+                                case "awards":
+                                    StringBuilder awardsMessage = new StringBuilder("Query result: [");
+                                    ArrayList<Actor> actorsWithAwards = new ArrayList<>();
+                                    int awardsIndex = action.getFilters().size() - 1;
+                                    ArrayList<String> filterAwards = new ArrayList<>(action.getFilters().get(awardsIndex));
+                                    for (ActorInputData actorData : input.getActors()) {
+                                        boolean containsAll = true;
+                                        for (String award : filterAwards) {
+                                            if (!actorData.getAwards().containsKey(Utils.stringToAwards(award))) {
+                                                containsAll = false;
+                                                break;
+                                            }
+                                        }
+                                        if (containsAll) {
+                                            actorsWithAwards.add(actorsMap.get(actorData.getName()));
+                                        }
+                                    }
+                                    if (actorsWithAwards.size() != 0) {
+                                        actorsWithAwards.sort(Comparator.comparingInt(Actor::getTotalAwards));
+                                        if (action.getSortType().equals("desc")) {
+                                            Collections.reverse(actorsWithAwards);
+                                        }
+                                        for (int i = 0; i < actorsWithAwards.size() - 1; ++i) {
+                                            awardsMessage.append(actorsWithAwards.get(i).getName());
+                                            awardsMessage.append(", ");
+                                        }
+                                        awardsMessage.append(actorsWithAwards.get(actorsWithAwards.size()
+                                                - 1).getName());
+                                    }
+                                    awardsMessage.append("]");
+                                    resultObject = fileWriter.writeFile(action.getActionId(), "", awardsMessage.toString());
+                                    break;
+                                case "filter_description":
+                                    StringBuilder descMessage = new StringBuilder("Query result: [");
+                                    ArrayList<Actor> actorsMatchDesc = new ArrayList<>();
+                                    int wordsIndex = action.getFilters().size() - 2;
+                                    ArrayList<String> filterWords = new ArrayList<>(action.getFilters().get(wordsIndex));
+                                    for (ActorInputData actorData : input.getActors()) {
+                                        boolean containsAll = true;
+                                        for (String word : filterWords) {
+                                            if (!actorData.getCareerDescription().toLowerCase().contains(word)) {
+                                                containsAll = false;
+                                                break;
+                                            }
+                                        }
+                                        if (containsAll) {
+                                            actorsMatchDesc.add(actorsMap.get(actorData.getName()));
+                                        }
+                                    }
+                                    if (actorsMatchDesc.size() != 0) {
+                                        actorsMatchDesc.sort(Comparator.comparing(Actor::getName));
+                                        if (action.getSortType().equals("desc")) {
+                                            Collections.reverse(actorsMatchDesc);
+                                        }
+                                        for (int i = 0; i < actorsMatchDesc.size() - 1; ++i) {
+                                            descMessage.append(actorsMatchDesc.get(i).getName());
+                                            descMessage.append(", ");
+                                        }
+                                        descMessage.append(actorsMatchDesc.get(actorsMatchDesc.size()
+                                                - 1).getName());
+                                    }
+                                    descMessage.append("]");
+                                    resultObject = fileWriter.writeFile(action.getActionId(), "", descMessage.toString());
+                                    break;
+                                default:
+                                    break;
+                            }
+                            break;
+                        case "movies":
+                            break;
+                        case "shows":
+                            break;
+                        case "users":
+                            break;
+                        default:
+                            break;
+                    }
                     break;
                 case "recommendation":
                     break;

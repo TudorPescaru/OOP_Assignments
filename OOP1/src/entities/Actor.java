@@ -25,6 +25,10 @@ public final class Actor {
      * List of awards the actor has earned
      */
     private final Map<ActorsAwards, Integer> awards;
+    /**
+     * Total number of awards an actor has earned
+     */
+    private final int totalAwards;
 
     public Actor(final String name, final String careerDescription,
                  final ArrayList<Video> filmography,
@@ -33,6 +37,11 @@ public final class Actor {
         this.careerDescription = careerDescription;
         this.filmography = filmography;
         this.awards = awards;
+        int sumAwards = 0;
+        for (int awardsOfType : this.awards.values()) {
+            sumAwards += awardsOfType;
+        }
+        this.totalAwards = sumAwards;
     }
 
     public String getName() {
@@ -49,5 +58,34 @@ public final class Actor {
 
     public Map<ActorsAwards, Integer> getAwards() {
         return awards;
+    }
+
+    public int getTotalAwards() {
+        return totalAwards;
+    }
+
+    /**
+     * Calculate the average rating of all videos an actor has starred in
+     * @return average rating of filmography
+     */
+    public Double getFilmographyAverageRating() {
+        Double ratingSum = 0.0;
+        int ratingsNotZero = 0;
+        for (Video video : this.filmography) {
+            if (video instanceof Movie) {
+                Movie movie = (Movie) video;
+                if (movie.getAverageRating() != 0.0) {
+                    ratingSum += movie.getAverageRating();
+                    ratingsNotZero++;
+                }
+            } else if (video instanceof Show) {
+                Show show = (Show) video;
+                if (show.getAverageRating() != 0.0) {
+                    ratingSum += show.getAverageRating();
+                    ratingsNotZero++;
+                }
+            }
+        }
+        return ratingSum / ratingsNotZero;
     }
 }

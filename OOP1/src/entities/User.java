@@ -128,7 +128,7 @@ public final class User {
                 return "success -> " + toRate.getTitle() + " was rated with " + rating + " by "
                         + this.username;
             } else {
-                return "error -> " + toRate.getTitle() + " is already rated";
+                return "error -> " + toRate.getTitle() + " has been already rated";
             }
         } else {
             return "error -> " + toRate.getTitle() + " is not seen";
@@ -154,7 +154,7 @@ public final class User {
                 return "success -> " + toRate.getTitle() + " was rated with " + rating + " by "
                         + this.username;
             } else {
-                return "error -> " + toRate.getTitle() + " is already rated";
+                return "error -> " + toRate.getTitle() + " has been already rated";
             }
         } else {
             return "error -> " + toRate.getTitle() + " is not seen";

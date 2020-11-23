@@ -30,6 +30,7 @@ public final class Movie extends Video {
         this.averageRating = 0.0;
     }
 
+    @Override
     public int getDuration() {
         return duration;
     }
@@ -38,6 +39,7 @@ public final class Movie extends Video {
         return ratings;
     }
 
+    @Override
     public Double getAverageRating() {
         return averageRating;
     }

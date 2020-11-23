@@ -26,6 +26,10 @@ public final class Show extends Video {
      * Show's overall average rating
      */
     private Double averageRating;
+    /**
+     * Show's total duration
+     */
+    private int duration;
 
     public Show(final String title, final int year,
                 final ArrayList<String> cast, final ArrayList<Genre> genres,
@@ -38,6 +42,11 @@ public final class Show extends Video {
             this.seasonAverageRatings.add(0.0);
         }
         this.averageRating = 0.0;
+        int totalDuration = 0;
+        for (Season season : this.seasons) {
+            totalDuration += season.getDuration();
+        }
+        this.duration = totalDuration;
     }
 
     public int getNumberOfSeasons() {
@@ -52,8 +61,14 @@ public final class Show extends Video {
         return seasonAverageRatings;
     }
 
+    @Override
     public Double getAverageRating() {
         return averageRating;
+    }
+
+    @Override
+    public int getDuration() {
+        return duration;
     }
 
     protected void addSeasonRating(final int seasonNumber, final Double rating) {

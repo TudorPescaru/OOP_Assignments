@@ -48,4 +48,16 @@ public abstract class Video {
     public final ArrayList<Genre> getGenres() {
         return genres;
     }
+
+    /**
+     * Abstract method to allow getting the duration of a movie or show using video upcasting
+     * @return duration of a video
+     */
+    public abstract int getDuration();
+
+    /**
+     * Abstract method to allow getting the average rating of a movie or show using video upcasting
+     * @return average rating of a video
+     */
+    public abstract Double getAverageRating();
 }

@@ -49,7 +49,7 @@ public final class Utils {
             case "kids" -> Genre.KIDS;
             case "western" -> Genre.WESTERN;
             case "tv movie" -> Genre.TV_MOVIE;
-            default -> null;
+            default -> Genre.NONE;
         };
     }
 
@@ -65,7 +65,7 @@ public final class Utils {
             case "BEST_DIRECTOR" -> ActorsAwards.BEST_DIRECTOR;
             case "BEST_PERFORMANCE" -> ActorsAwards.BEST_PERFORMANCE;
             case "PEOPLE_CHOICE_AWARD" -> ActorsAwards.PEOPLE_CHOICE_AWARD;
-            default -> null;
+            default -> ActorsAwards.NONE;
         };
     }
 

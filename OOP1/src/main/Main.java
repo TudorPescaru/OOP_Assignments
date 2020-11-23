@@ -85,18 +85,18 @@ public final class Main {
                     switch (action.getType()) {
                         case "view":
                             String viewMessage = database.userViewVideo(action);
-                            resultObject = fileWriter.writeFile(action.getActionId(), "",
-                                                                viewMessage);
+                            resultObject = fileWriter.writeFile(action.getActionId(),
+                                                        "", viewMessage);
                             break;
                         case "favorite":
                             String favoriteMessage = database.userFavoriteVideo(action);
-                            resultObject = fileWriter.writeFile(action.getActionId(), "",
-                                                                favoriteMessage);
+                            resultObject = fileWriter.writeFile(action.getActionId(),
+                                                        "", favoriteMessage);
                             break;
                         case "rating":
                             String rateMessage = database.userRateVideo(action);
-                            resultObject = fileWriter.writeFile(action.getActionId(), "",
-                                                                rateMessage);
+                            resultObject = fileWriter.writeFile(action.getActionId(),
+                                                        "", rateMessage);
                             break;
                         default:
                             break;
@@ -108,31 +108,53 @@ public final class Main {
                             switch (action.getCriteria()) {
                                 case "average":
                                     String averageMessage = database.queryAverageActors(action);
-                                    resultObject = fileWriter.writeFile(action.getActionId(), "",
-                                                                        averageMessage);
+                                    resultObject = fileWriter.writeFile(action.getActionId(),
+                                                                "", averageMessage);
                                     break;
                                 case "awards":
                                     String awardsMessage = database.queryAwardsActors(action);
                                     resultObject = fileWriter.writeFile(action.getActionId(),
-                                            "", awardsMessage);
+                                                                "", awardsMessage);
                                     break;
                                 case "filter_description":
                                     String descMessage = database.queryDescriptionActors(action);
                                     resultObject = fileWriter.writeFile(action.getActionId(),
-                                            "", descMessage);
+                                                                "", descMessage);
+                                    break;
+                                default:
+                                    break;
+                            }
+                        case "movies": case "shows":
+                            switch (action.getCriteria()) {
+                                case "ratings":
+                                    String ratingsMessage = database.queryRatingVideo(action);
+                                    resultObject = fileWriter.writeFile(action.getActionId(),
+                                                                "", ratingsMessage);
+                                    break;
+                                case "favorite":
+                                    String favoriteMessage = database.queryFavoriteVideo(action);
+                                    resultObject = fileWriter.writeFile(action.getActionId(),
+                                                                "", favoriteMessage);
+                                    break;
+                                case "longest":
+                                    String longestMessage = database.queryLongestVideo(action);
+                                    resultObject = fileWriter.writeFile(action.getActionId(),
+                                                                "", longestMessage);
+                                    break;
+                                case "most_viewed":
+                                    String viewsMessage = database.queryMostViewedVideo(action);
+                                    resultObject = fileWriter.writeFile(action.getActionId(),
+                                                                "", viewsMessage);
                                     break;
                                 default:
                                     break;
                             }
                             break;
-                        case "movies":
-                            break;
-                        case "shows":
-                            break;
                         case "users":
+                            String usersMessage = database.queryUsers(action);
+                            resultObject = fileWriter.writeFile(action.getActionId(),
+                                                        "", usersMessage);
                             break;
-
-
                         default:
                             break;
                     }

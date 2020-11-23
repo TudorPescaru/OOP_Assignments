@@ -14,9 +14,10 @@ import fileio.MovieInputData;
 import fileio.SerialInputData;
 import utils.Utils;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.Collections;
 import java.util.Comparator;
 
@@ -219,8 +220,16 @@ public final class Database {
             }
         }
         if (actorsWithAwards.size() != 0) {
-            actorsWithAwards.sort(Comparator.comparingInt(Actor::getTotalAwards));
-            appendToMessage(action, awardsMessage, actorsWithAwards);
+            actorsWithAwards.sort(Comparator.comparingInt(Actor::getTotalAwards)
+                                            .thenComparing(Actor::getName));
+            if (action.getSortType().equals("desc")) {
+                Collections.reverse(actorsWithAwards);
+            }
+            for (int i = 0; i < actorsWithAwards.size() - 1; ++i) {
+                awardsMessage.append(actorsWithAwards.get(i).getName());
+                awardsMessage.append(", ");
+            }
+            awardsMessage.append(actorsWithAwards.get(actorsWithAwards.size() - 1).getName());
         }
         awardsMessage.append("]");
         return awardsMessage.toString();
@@ -250,28 +259,310 @@ public final class Database {
         }
         if (actorsMatchDesc.size() != 0) {
             actorsMatchDesc.sort(Comparator.comparing(Actor::getName));
-            appendToMessage(action, descMessage, actorsMatchDesc);
+            if (action.getSortType().equals("desc")) {
+                Collections.reverse(actorsMatchDesc);
+            }
+            for (int i = 0; i < actorsMatchDesc.size() - 1; ++i) {
+                descMessage.append(actorsMatchDesc.get(i).getName());
+                descMessage.append(", ");
+            }
+            descMessage.append(actorsMatchDesc.get(actorsMatchDesc.size() - 1).getName());
         }
         descMessage.append("]");
         return descMessage.toString();
     }
 
     /**
-     * Helper function for queries above
+     * Performs a query on videos based on rating
      * @param action details of action to be performed
-     * @param descMessage message to append to
-     * @param actorsMatchDesc list of actors from which to append
+     * @return message corresponding to action
      */
-    private void appendToMessage(final ActionInputData action, final StringBuilder descMessage,
-                                 final ArrayList<Actor> actorsMatchDesc) {
+    public String queryRatingVideo(final ActionInputData action) {
+        int n = action.getNumber();
+        StringBuilder ratingMessage = new StringBuilder("Query result: [");
+        Integer year = null;
+        if (action.getFilters().get(0).get(0) != null) {
+            year = Integer.parseInt(action.getFilters().get(0).get(0));
+        }
+        Genre genre = null;
+        if (action.getFilters().get(1).get(0) != null) {
+            genre = Utils.stringToGenre(action.getFilters().get(1).get(0));
+        }
+        ArrayList<Video> videosToSort = new ArrayList<>();
+        for (Video video : videosMap.values()) {
+            if (year != null && year != video.getYear()) {
+                continue;
+            }
+            if (genre != null && !video.getGenres().contains(genre)) {
+                continue;
+            }
+            if (action.getObjectType().equals("movies") && video instanceof Show) {
+                continue;
+            }
+            if (action.getObjectType().equals("shows") && video instanceof Movie) {
+                continue;
+            }
+            if (Double.compare(video.getAverageRating(), 0.0) == 0) {
+                continue;
+            }
+            videosToSort.add(video);
+        }
+        if (videosToSort.size() == 0) {
+            ratingMessage.append("]");
+            return ratingMessage.toString();
+        }
+        videosToSort.sort(Comparator.comparingDouble(Video::getAverageRating)
+                                    .thenComparing(Video::getTitle));
+        if (videosToSort.size() >= n) {
+            for (int i = 0; i < n - 1; ++i) {
+                ratingMessage.append(videosToSort.get(i).getTitle());
+                ratingMessage.append(", ");
+            }
+            ratingMessage.append(videosToSort.get(n - 1).getTitle());
+        } else {
+            for (int i = 0; i < videosToSort.size() - 1; ++i) {
+                ratingMessage.append(videosToSort.get(i).getTitle());
+                ratingMessage.append(", ");
+            }
+            ratingMessage.append(videosToSort.get(videosToSort.size() - 1).getTitle());
+        }
+        ratingMessage.append("]");
+        return ratingMessage.toString();
+    }
+
+    /**
+     * Performs a query on videos based on number of favorites
+     * @param action details of action to be performed
+     * @return message corresponding to action
+     */
+    public String queryFavoriteVideo(final ActionInputData action) {
+        int n = action.getNumber();
+        StringBuilder favoriteMessage = new StringBuilder("Query result: [");
+        Integer year = null;
+        if (action.getFilters().get(0).get(0) != null) {
+            year = Integer.parseInt(action.getFilters().get(0).get(0));
+        }
+        Genre genre = null;
+        if (action.getFilters().get(1).get(0) != null) {
+            genre = Utils.stringToGenre(action.getFilters().get(1).get(0));
+        }
+        Map<String, Integer> videosToFavorites = new LinkedHashMap<>();
+        for (User user : usersMap.values()) {
+            for (Video video : user.getFavorites()) {
+                if (year != null && year != video.getYear()) {
+                    continue;
+                }
+                if (genre != null && !video.getGenres().contains(genre)) {
+                    continue;
+                }
+                if (action.getObjectType().equals("movies") && video instanceof Show) {
+                    continue;
+                }
+                if (action.getObjectType().equals("shows") && video instanceof Movie) {
+                    continue;
+                }
+                if (videosToFavorites.containsKey(video.getTitle())) {
+                    videosToFavorites.put(video.getTitle(),
+                            videosToFavorites.get(video.getTitle()) + 1);
+                } else {
+                    videosToFavorites.put(video.getTitle(), 1);
+                }
+            }
+        }
+        if (videosToFavorites.size() == 0) {
+            favoriteMessage.append("]");
+            return favoriteMessage.toString();
+        }
+        Map<String, Integer> videosToSort = new LinkedHashMap<>();
         if (action.getSortType().equals("desc")) {
-            Collections.reverse(actorsMatchDesc);
+            videosToFavorites.entrySet()
+                    .stream()
+                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                    .forEachOrdered(video -> videosToSort.put(video.getKey(), video.getValue()));
+        } else {
+            videosToFavorites.entrySet()
+                    .stream()
+                    .sorted(Map.Entry.comparingByValue())
+                    .forEachOrdered(video -> videosToSort.put(video.getKey(), video.getValue()));
         }
-        for (int i = 0; i < actorsMatchDesc.size() - 1; ++i) {
-            descMessage.append(actorsMatchDesc.get(i).getName());
-            descMessage.append(", ");
+        ArrayList<String> sortedVideos = new ArrayList<>(videosToSort.keySet());
+        if (videosToFavorites.size() >= n) {
+            for (int i = 0; i < n - 1; ++i) {
+                favoriteMessage.append(sortedVideos.get(i));
+                favoriteMessage.append(", ");
+            }
+            favoriteMessage.append(sortedVideos.get(n - 1));
+        } else {
+            for (int i = 0; i < sortedVideos.size() - 1; ++i) {
+                favoriteMessage.append(sortedVideos.get(i));
+                favoriteMessage.append(", ");
+            }
+            favoriteMessage.append(sortedVideos.get(sortedVideos.size() - 1));
         }
-        descMessage.append(actorsMatchDesc.get(actorsMatchDesc.size()
-                - 1).getName());
+        favoriteMessage.append("]");
+        return favoriteMessage.toString();
+    }
+
+    /**
+     * Performs a query on videos based on length
+     * @param action details of action to be performed
+     * @return message corresponding to action
+     */
+    public String queryLongestVideo(final ActionInputData action) {
+        int n = action.getNumber();
+        StringBuilder lengthMessage = new StringBuilder("Query result: [");
+        Integer year = null;
+        if (action.getFilters().get(0).get(0) != null) {
+            year = Integer.parseInt(action.getFilters().get(0).get(0));
+        }
+        Genre genre = null;
+        if (action.getFilters().get(1).get(0) != null) {
+            genre = Utils.stringToGenre(action.getFilters().get(1).get(0));
+        }
+        ArrayList<Video> videosToSort = new ArrayList<>();
+        for (Video video : videosMap.values()) {
+            if (year != null && year != video.getYear()) {
+                continue;
+            }
+            if (genre != null && !video.getGenres().contains(genre)) {
+                continue;
+            }
+            if (action.getObjectType().equals("movies") && video instanceof Show) {
+                continue;
+            }
+            if (action.getObjectType().equals("shows") && video instanceof Movie) {
+                continue;
+            }
+            videosToSort.add(video);
+        }
+        if (videosToSort.size() == 0) {
+            lengthMessage.append("]");
+            return lengthMessage.toString();
+        }
+        videosToSort.sort(Comparator.comparingInt(Video::getDuration)
+                .thenComparing(Video::getTitle));
+        if (action.getSortType().equals("desc")) {
+            Collections.reverse(videosToSort);
+        }
+        if (videosToSort.size() >= n) {
+            for (int i = 0; i < n - 1; ++i) {
+                lengthMessage.append(videosToSort.get(i).getTitle());
+                lengthMessage.append(", ");
+            }
+            lengthMessage.append(videosToSort.get(n - 1).getTitle());
+        } else {
+            for (int i = 0; i < videosToSort.size() - 1; ++i) {
+                lengthMessage.append(videosToSort.get(i).getTitle());
+                lengthMessage.append(", ");
+            }
+            lengthMessage.append(videosToSort.get(videosToSort.size() - 1).getTitle());
+        }
+        lengthMessage.append("]");
+        return lengthMessage.toString();
+    }
+
+    /**
+     * Performs a query on videos based on number of views
+     * @param action details of action to be performed
+     * @return message corresponding to action
+     */
+    public String queryMostViewedVideo(final ActionInputData action) {
+        int n = action.getNumber();
+        StringBuilder viewsMessage = new StringBuilder("Query result: [");
+        Integer year = null;
+        if (action.getFilters().get(0).get(0) != null) {
+            year = Integer.parseInt(action.getFilters().get(0).get(0));
+        }
+        Genre genre = null;
+        if (action.getFilters().get(1).get(0) != null) {
+            genre = Utils.stringToGenre(action.getFilters().get(1).get(0));
+        }
+        Map<String, Integer> videosToViews = new LinkedHashMap<>();
+        for (User user : usersMap.values()) {
+            for (Video video : user.getHistory().keySet()) {
+                if (year != null && year != video.getYear()) {
+                    continue;
+                }
+                if (genre != null && !video.getGenres().contains(genre)) {
+                    continue;
+                }
+                if (action.getObjectType().equals("movies") && video instanceof Show) {
+                    continue;
+                }
+                if (action.getObjectType().equals("shows") && video instanceof Movie) {
+                    continue;
+                }
+                if (videosToViews.containsKey(video.getTitle())) {
+                    videosToViews.put(video.getTitle(), videosToViews.get(video.getTitle())
+                            + user.getHistory().get(video));
+                } else {
+                    videosToViews.put(video.getTitle(), user.getHistory().get(video));
+                }
+            }
+        }
+        if (videosToViews.size() == 0) {
+            viewsMessage.append("]");
+            return viewsMessage.toString();
+        }
+        Map<String, Integer> videosToSort = new LinkedHashMap<>();
+        if (action.getSortType().equals("desc")) {
+            videosToViews.entrySet()
+                    .stream()
+                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                    .forEachOrdered(video -> videosToSort.put(video.getKey(), video.getValue()));
+        } else {
+            videosToViews.entrySet()
+                    .stream()
+                    .sorted(Map.Entry.comparingByValue())
+                    .forEachOrdered(video -> videosToSort.put(video.getKey(), video.getValue()));
+        }
+        ArrayList<String> sortedVideos = new ArrayList<>(videosToSort.keySet());
+        if (videosToViews.size() >= n) {
+            for (int i = 0; i < n - 1; ++i) {
+                viewsMessage.append(sortedVideos.get(i));
+                viewsMessage.append(", ");
+            }
+            viewsMessage.append(sortedVideos.get(n - 1));
+        } else {
+            for (int i = 0; i < sortedVideos.size() - 1; ++i) {
+                viewsMessage.append(sortedVideos.get(i));
+                viewsMessage.append(", ");
+            }
+            viewsMessage.append(sortedVideos.get(sortedVideos.size() - 1));
+        }
+        viewsMessage.append("]");
+        return viewsMessage.toString();
+    }
+
+    /**
+     * Performs a query on users based on most activity
+     * @param action details of action to be performed
+     * @return message corresponding to action
+     */
+    public String queryUsers(final ActionInputData action) {
+        int n = action.getNumber();
+        StringBuilder usersMessage = new StringBuilder("Query result: [");
+        ArrayList<User> usersToSort = new ArrayList<>(this.usersMap.values());
+        usersToSort.sort(Comparator.comparingInt(User::getNumRatings).thenComparing(
+                                                                    User::getUsername));
+        usersToSort.removeIf(user -> user.getNumRatings() == 0);
+        if (action.getSortType().equals("desc")) {
+            Collections.reverse(usersToSort);
+        }
+        if (usersToSort.size() >= n) {
+            for (int i = 0; i < n - 1; ++i) {
+                usersMessage.append(usersToSort.get(i).getUsername());
+                usersMessage.append(", ");
+            }
+            usersMessage.append(usersToSort.get(n - 1).getUsername());
+        } else {
+            for (int i = 0; i < usersToSort.size() - 1; ++i) {
+                usersMessage.append(usersToSort.get(i).getUsername());
+                usersMessage.append(", ");
+            }
+            usersMessage.append(usersToSort.get(usersToSort.size() - 1).getUsername());
+        }
+        usersMessage.append("]");
+        return usersMessage.toString();
     }
 }

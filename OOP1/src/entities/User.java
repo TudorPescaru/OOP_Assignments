@@ -69,6 +69,10 @@ public final class User {
         return ratedShows;
     }
 
+    public int getNumRatings() {
+        return this.ratedMovies.size() + this.ratedShows.size();
+    }
+
     /**
      * Add a viewed video (movie/tv show) to the user's favorites list
      * @param toFavorite video to add

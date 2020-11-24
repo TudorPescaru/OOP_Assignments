@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Arrays;
 
 public final class Database {
 
@@ -30,15 +31,15 @@ public final class Database {
     /**
      * Map of actor objects in database
      */
-    private Map<String, Actor> actorsMap = new HashMap<>();
+    private Map<String, Actor> actorsMap = new LinkedHashMap<>();
     /**
      * Map of video objects in database
      */
-    private Map<String, Video> videosMap = new HashMap<>();
+    private Map<String, Video> videosMap = new LinkedHashMap<>();
     /**
      * Map of user objects in database
      */
-    private Map<String, User> usersMap = new HashMap<>();
+    private Map<String, User> usersMap = new LinkedHashMap<>();
 
     private Database() {
     }
@@ -130,7 +131,7 @@ public final class Database {
     /**
      * Performs the action of viewing a video for a certain user
      * @param action details of action to be performed
-     * @return message corresponding to action
+     * @return success or failure message corresponding to action
      */
     public String userViewVideo(final ActionInputData action) {
         User user = this.usersMap.get(action.getUsername());
@@ -141,7 +142,7 @@ public final class Database {
     /**
      * Performs the action of favoriting a video for a certain user
      * @param action details of action to be performed
-     * @return message corresponding to action
+     * @return success or failure message corresponding to action
      */
     public String userFavoriteVideo(final ActionInputData action) {
         User user = this.usersMap.get(action.getUsername());
@@ -152,7 +153,7 @@ public final class Database {
     /**
      * Performs the action of rating a video for a certain user
      * @param action details of action to be performed
-     * @return message corresponding to action
+     * @return success or failure message corresponding to action
      */
     public String userRateVideo(final ActionInputData action) {
         User user = this.usersMap.get(action.getUsername());
@@ -168,15 +169,19 @@ public final class Database {
     /**
      * Performs a query on actors based on average
      * @param action details of action to be performed
-     * @return message corresponding to action
+     * @return success or failure message corresponding to action
      */
     public String queryAverageActors(final ActionInputData action) {
         int n = action.getNumber();
+        StringBuilder averageMessage = new StringBuilder("Query result: [");
         ArrayList<Actor> actorsToSort = new ArrayList<>(this.actorsMap.values());
         actorsToSort.sort(Comparator.comparingDouble(
                             Actor::getFilmographyAverageRating).thenComparing(Actor::getName));
         actorsToSort.removeIf(actor -> actor.getFilmographyAverageRating().isNaN());
-        StringBuilder averageMessage = new StringBuilder("Query result: [");
+        if (actorsToSort.isEmpty()) {
+            averageMessage.append("]");
+            return averageMessage.toString();
+        }
         if (action.getSortType().equals("desc")) {
             Collections.reverse(actorsToSort);
         }
@@ -200,23 +205,23 @@ public final class Database {
     /**
      * Performs a query on actors based on awards
      * @param action details of action to be performed
-     * @return message corresponding to action
+     * @return success or failure message corresponding to action
      */
     public String queryAwardsActors(final ActionInputData action) {
         StringBuilder awardsMessage = new StringBuilder("Query result: [");
         ArrayList<Actor> actorsWithAwards = new ArrayList<>();
         int awardsIndex = action.getFilters().size() - 1;
         ArrayList<String> filterAwards = new ArrayList<>(action.getFilters().get(awardsIndex));
-        for (ActorInputData actorData : this.input.getActors()) {
+        for (Actor actor : this.actorsMap.values()) {
             boolean containsAll = true;
             for (String award : filterAwards) {
-                if (!actorData.getAwards().containsKey(Utils.stringToAwards(award))) {
+                if (!actor.getAwards().containsKey(Utils.stringToAwards(award))) {
                     containsAll = false;
                     break;
                 }
             }
             if (containsAll) {
-                actorsWithAwards.add(this.actorsMap.get(actorData.getName()));
+                actorsWithAwards.add(actor);
             }
         }
         if (actorsWithAwards.size() != 0) {
@@ -238,23 +243,24 @@ public final class Database {
     /**
      * Performs a query on actors based on description
      * @param action details of action to be performed
-     * @return message corresponding to action
+     * @return success or failure message corresponding to action
      */
     public String queryDescriptionActors(final ActionInputData action) {
         StringBuilder descMessage = new StringBuilder("Query result: [");
         ArrayList<Actor> actorsMatchDesc = new ArrayList<>();
         int wordsIndex = action.getFilters().size() - 2;
         ArrayList<String> filterWords = new ArrayList<>(action.getFilters().get(wordsIndex));
-        for (ActorInputData actorData : input.getActors()) {
+        for (Actor actor : this.actorsMap.values()) {
             boolean containsAll = true;
             for (String word : filterWords) {
-                if (!actorData.getCareerDescription().toLowerCase().contains(word)) {
+                if (!Arrays.asList(actor.getCareerDescription().toLowerCase().split("[\\s'.,!?-]"))
+                                    .contains(word)) {
                     containsAll = false;
                     break;
                 }
             }
             if (containsAll) {
-                actorsMatchDesc.add(this.actorsMap.get(actorData.getName()));
+                actorsMatchDesc.add(actor);
             }
         }
         if (actorsMatchDesc.size() != 0) {
@@ -275,7 +281,7 @@ public final class Database {
     /**
      * Performs a query on videos based on rating
      * @param action details of action to be performed
-     * @return message corresponding to action
+     * @return success or failure message corresponding to action
      */
     public String queryRatingVideo(final ActionInputData action) {
         int n = action.getNumber();
@@ -290,16 +296,7 @@ public final class Database {
         }
         ArrayList<Video> videosToSort = new ArrayList<>();
         for (Video video : videosMap.values()) {
-            if (year != null && year != video.getYear()) {
-                continue;
-            }
-            if (genre != null && !video.getGenres().contains(genre)) {
-                continue;
-            }
-            if (action.getObjectType().equals("movies") && video instanceof Show) {
-                continue;
-            }
-            if (action.getObjectType().equals("shows") && video instanceof Movie) {
+            if (checkMatchesFilters(action, year, genre, video)) {
                 continue;
             }
             if (Double.compare(video.getAverageRating(), 0.0) == 0) {
@@ -333,7 +330,7 @@ public final class Database {
     /**
      * Performs a query on videos based on number of favorites
      * @param action details of action to be performed
-     * @return message corresponding to action
+     * @return success or failure message corresponding to action
      */
     public String queryFavoriteVideo(final ActionInputData action) {
         int n = action.getNumber();
@@ -346,19 +343,10 @@ public final class Database {
         if (action.getFilters().get(1).get(0) != null) {
             genre = Utils.stringToGenre(action.getFilters().get(1).get(0));
         }
-        Map<String, Integer> videosToFavorites = new LinkedHashMap<>();
+        Map<String, Integer> videosToFavorites = new HashMap<>();
         for (User user : usersMap.values()) {
             for (Video video : user.getFavorites()) {
-                if (year != null && year != video.getYear()) {
-                    continue;
-                }
-                if (genre != null && !video.getGenres().contains(genre)) {
-                    continue;
-                }
-                if (action.getObjectType().equals("movies") && video instanceof Show) {
-                    continue;
-                }
-                if (action.getObjectType().equals("shows") && video instanceof Movie) {
+                if (checkMatchesFilters(action, year, genre, video)) {
                     continue;
                 }
                 if (videosToFavorites.containsKey(video.getTitle())) {
@@ -377,11 +365,13 @@ public final class Database {
         if (action.getSortType().equals("desc")) {
             videosToFavorites.entrySet()
                     .stream()
+                    .sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
                     .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                     .forEachOrdered(video -> videosToSort.put(video.getKey(), video.getValue()));
         } else {
             videosToFavorites.entrySet()
                     .stream()
+                    .sorted(Map.Entry.comparingByKey())
                     .sorted(Map.Entry.comparingByValue())
                     .forEachOrdered(video -> videosToSort.put(video.getKey(), video.getValue()));
         }
@@ -406,7 +396,7 @@ public final class Database {
     /**
      * Performs a query on videos based on length
      * @param action details of action to be performed
-     * @return message corresponding to action
+     * @return success or failure message corresponding to action
      */
     public String queryLongestVideo(final ActionInputData action) {
         int n = action.getNumber();
@@ -421,16 +411,7 @@ public final class Database {
         }
         ArrayList<Video> videosToSort = new ArrayList<>();
         for (Video video : videosMap.values()) {
-            if (year != null && year != video.getYear()) {
-                continue;
-            }
-            if (genre != null && !video.getGenres().contains(genre)) {
-                continue;
-            }
-            if (action.getObjectType().equals("movies") && video instanceof Show) {
-                continue;
-            }
-            if (action.getObjectType().equals("shows") && video instanceof Movie) {
+            if (checkMatchesFilters(action, year, genre, video)) {
                 continue;
             }
             videosToSort.add(video);
@@ -464,7 +445,7 @@ public final class Database {
     /**
      * Performs a query on videos based on number of views
      * @param action details of action to be performed
-     * @return message corresponding to action
+     * @return success or failure message corresponding to action
      */
     public String queryMostViewedVideo(final ActionInputData action) {
         int n = action.getNumber();
@@ -477,19 +458,10 @@ public final class Database {
         if (action.getFilters().get(1).get(0) != null) {
             genre = Utils.stringToGenre(action.getFilters().get(1).get(0));
         }
-        Map<String, Integer> videosToViews = new LinkedHashMap<>();
+        Map<String, Integer> videosToViews = new HashMap<>();
         for (User user : usersMap.values()) {
             for (Video video : user.getHistory().keySet()) {
-                if (year != null && year != video.getYear()) {
-                    continue;
-                }
-                if (genre != null && !video.getGenres().contains(genre)) {
-                    continue;
-                }
-                if (action.getObjectType().equals("movies") && video instanceof Show) {
-                    continue;
-                }
-                if (action.getObjectType().equals("shows") && video instanceof Movie) {
+                if (checkMatchesFilters(action, year, genre, video)) {
                     continue;
                 }
                 if (videosToViews.containsKey(video.getTitle())) {
@@ -508,11 +480,13 @@ public final class Database {
         if (action.getSortType().equals("desc")) {
             videosToViews.entrySet()
                     .stream()
+                    .sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
                     .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                     .forEachOrdered(video -> videosToSort.put(video.getKey(), video.getValue()));
         } else {
             videosToViews.entrySet()
                     .stream()
+                    .sorted(Map.Entry.comparingByKey())
                     .sorted(Map.Entry.comparingByValue())
                     .forEachOrdered(video -> videosToSort.put(video.getKey(), video.getValue()));
         }
@@ -535,9 +509,34 @@ public final class Database {
     }
 
     /**
+     * Checks if a video matches all given parameters for an action
+     * @param action details of action to be performed
+     * @param year year filter to match (if existent)
+     * @param genre genre filter to match (if existent)
+     * @param video type of video filter to match
+     * @return boolean on whether the video matches the filters
+     */
+    private boolean checkMatchesFilters(final ActionInputData action, final Integer year,
+                                        final Genre genre, final Video video) {
+        if (year != null && year != video.getYear()) {
+            return true;
+        }
+        if (genre != null && !video.getGenres().contains(genre)) {
+            return true;
+        }
+        if (action.getObjectType().equals("movies") && video instanceof Show) {
+            return true;
+        }
+        if (action.getObjectType().equals("shows") && video instanceof Movie) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Performs a query on users based on most activity
      * @param action details of action to be performed
-     * @return message corresponding to action
+     * @return success or failure message corresponding to action
      */
     public String queryUsers(final ActionInputData action) {
         int n = action.getNumber();
@@ -546,6 +545,10 @@ public final class Database {
         usersToSort.sort(Comparator.comparingInt(User::getNumRatings).thenComparing(
                                                                     User::getUsername));
         usersToSort.removeIf(user -> user.getNumRatings() == 0);
+        if (usersToSort.isEmpty()) {
+            usersMessage.append("]");
+            return usersMessage.toString();
+        }
         if (action.getSortType().equals("desc")) {
             Collections.reverse(usersToSort);
         }
@@ -564,5 +567,238 @@ public final class Database {
         }
         usersMessage.append("]");
         return usersMessage.toString();
+    }
+
+    /**
+     * Retrieves a recommended video based on user's unseen videos
+     * @param action details of action to be performed
+     * @return success or failure message corresponding to action
+     */
+    public String recommendStandard(final ActionInputData action) {
+        StringBuilder standardMessage = new StringBuilder("StandardRecommendation result: ");
+        User user;
+        if (usersMap.containsKey(action.getUsername())) {
+            user = usersMap.get(action.getUsername());
+        } else {
+            return "StandardRecommendation cannot be applied!";
+        }
+        Video firstUnseen = null;
+        for (Video video : videosMap.values()) {
+            if (!user.getHistory().containsKey(video)) {
+                firstUnseen = video;
+                break;
+            }
+        }
+        if (firstUnseen != null) {
+            standardMessage.append(firstUnseen.getTitle());
+        } else {
+            return "StandardRecommendation cannot be applied!";
+        }
+        return standardMessage.toString();
+    }
+
+    /**
+     * Retrieves a recommended video based on user's best unseen videos rating wise
+     * @param action details of action to be performed
+     * @return success or failure message corresponding to action
+     */
+    public String recommendBestUnseen(final ActionInputData action) {
+        StringBuilder bestUnseenMessage
+                = new StringBuilder("BestRatedUnseenRecommendation result: ");
+        User user;
+        if (usersMap.containsKey(action.getUsername())) {
+            user = usersMap.get(action.getUsername());
+        } else {
+            return "BestRatedUnseenRecommendation cannot be applied!";
+        }
+        ArrayList<Video> videosToSort = new ArrayList<>(videosMap.values());
+        videosToSort.sort(Comparator.comparingDouble(Video::getAverageRating));
+        videosToSort.removeIf(video -> Double.compare(video.getAverageRating(), 0.0) == 0);
+        Collections.reverse(videosToSort);
+        if (videosToSort.isEmpty()) {
+            return "BestRatedUnseenRecommendation cannot be applied!";
+        }
+        Video firstBestUnseen = null;
+        for (Video video : videosToSort) {
+            if (!user.getHistory().containsKey(video)) {
+                firstBestUnseen = video;
+                break;
+            }
+        }
+        if (firstBestUnseen != null) {
+            bestUnseenMessage.append(firstBestUnseen.getTitle());
+        } else {
+            Video firstUnseen = null;
+            for (Video video : videosMap.values()) {
+                if (!user.getHistory().containsKey(video)) {
+                    firstUnseen = video;
+                    break;
+                }
+            }
+            if (firstUnseen != null) {
+                bestUnseenMessage.append(firstUnseen.getTitle());
+            } else {
+                return "BestRatedUnseenRecommendation cannot be applied!";
+            }
+        }
+        return bestUnseenMessage.toString();
+    }
+
+    /**
+     * Retrieves a recommended video based on first unseen video from most popular genre
+     * @param action details of action to be performed
+     * @return success or failure message corresponding to action
+     */
+    public String recommendPopular(final ActionInputData action) {
+        StringBuilder popularMessage = new StringBuilder("PopularRecommendation result: ");
+        User user;
+        if (usersMap.containsKey(action.getUsername())) {
+            user = usersMap.get(action.getUsername());
+        } else {
+            return "PopularRecommendation cannot be applied!";
+        }
+        if (!user.getSubscriptionType().equals("PREMIUM")) {
+            return "PopularRecommendation cannot be applied!";
+        }
+        Map<Video, Integer> videosToViews = new HashMap<>();
+        for (User userToCheck : usersMap.values()) {
+            for (Video video : userToCheck.getHistory().keySet()) {
+                if (videosToViews.containsKey(video)) {
+                    videosToViews.put(video, videosToViews.get(video)
+                                                + userToCheck.getHistory().get(video));
+                } else {
+                    videosToViews.put(video, userToCheck.getHistory().get(video));
+                }
+            }
+        }
+        Map<Genre, Integer> genresToViews = new LinkedHashMap<>();
+//        for (Genre genre : Genre.values()) {
+//            for (Video video : videosMap.values()) {
+//                if (videosToViews.containsKey(video)) {
+//                    if (genresToViews.containsKey(genre)) {
+//                        genresToViews.put(genre, genresToViews.get(genre)
+//                                                    + videosToViews.get(video));
+//                    } else {
+//                        genresToViews.put(genre, videosToViews.get(video));
+//                    }
+//                }
+//            }
+//        }
+        for (Video video : videosMap.values()) {
+            for (Genre genre : video.getGenres()) {
+                if (videosToViews.containsKey(video)) {
+                    if (genresToViews.containsKey(genre)) {
+                        genresToViews.put(genre, genresToViews.get(genre)
+                                                    + videosToViews.get(video));
+                    } else {
+                        genresToViews.put(genre, videosToViews.get(video));
+                    }
+                }
+            }
+        }
+
+        Map<Genre, Integer> genresToSort = new LinkedHashMap<>();
+        genresToViews.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .forEachOrdered(genre -> genresToSort.put(genre.getKey(), genre.getValue()));
+        Video mostPopular = null;
+        for (Genre genre : genresToSort.keySet()) {
+            for (Video video : videosMap.values()) {
+                if (video.getGenres().contains(genre) && !user.getHistory().containsKey(video)) {
+                    mostPopular = video;
+                    break;
+                }
+            }
+            if (mostPopular != null) {
+                break;
+            }
+        }
+        if (mostPopular != null) {
+            popularMessage.append(mostPopular.getTitle());
+        } else {
+            return "PopularRecommendation cannot be applied!";
+        }
+        return popularMessage.toString();
+    }
+
+    /**
+     * Retrieves a recommended video based on most favorited unseen videos
+     * @param action details of action to be performed
+     * @return success or failure message corresponding to action
+     */
+    public String recommendFavorite(final ActionInputData action) {
+        StringBuilder favoriteMessage = new StringBuilder("FavoriteRecommendation result: ");
+        User user;
+        if (usersMap.containsKey(action.getUsername())) {
+            user = usersMap.get(action.getUsername());
+        } else {
+            return "FavoriteRecommendation cannot be applied!";
+        }
+        if (!user.getSubscriptionType().equals("PREMIUM")) {
+            return "FavoriteRecommendation cannot be applied!";
+        }
+        Map<Video, Integer> videosToFavorites = new LinkedHashMap<>();
+        for (Video video : videosMap.values()) {
+            if (!user.getHistory().containsKey(video)) {
+                videosToFavorites.put(video, 0);
+            }
+        }
+        if (videosToFavorites.isEmpty()) {
+            return "FavoriteRecommendation cannot be applied!";
+        }
+        for (User userToCheck : usersMap.values()) {
+            for (Video video : userToCheck.getFavorites()) {
+                if (videosToFavorites.containsKey(video)) {
+                    videosToFavorites.put(video, videosToFavorites.get(video) + 1);
+                }
+            }
+        }
+        Video mostFavorited = videosToFavorites.entrySet()
+                                                .stream()
+                                                .max(Comparator.comparingInt(Map.Entry::getValue))
+                                                .get().getKey();
+        favoriteMessage.append(mostFavorited.getTitle());
+        return favoriteMessage.toString();
+    }
+
+    /**
+     * Retrieves a set of recommended videos from a certain genre, sorted by rating and that
+     * have not been viewed
+     * @param action details of action to be performed
+     * @return success or failure message corresponding to action
+     */
+    public String recommendSearch(final ActionInputData action) {
+        StringBuilder searchMessage = new StringBuilder("SearchRecommendation result: ");
+        User user;
+        if (usersMap.containsKey(action.getUsername())) {
+            user = usersMap.get(action.getUsername());
+        } else {
+            return "SearchRecommendation cannot be applied!";
+        }
+        Genre genre = Utils.stringToGenre(action.getGenre());
+        if (!user.getSubscriptionType().equals("PREMIUM")) {
+            return "SearchRecommendation cannot be applied!";
+        }
+        ArrayList<Video> videosToSort = new ArrayList<>();
+        for (Video video : videosMap.values()) {
+            if (!video.getGenres().contains(genre) || user.getHistory().containsKey(video)) {
+                continue;
+            }
+            videosToSort.add(video);
+        }
+        if (videosToSort.isEmpty()) {
+            return "SearchRecommendation cannot be applied!";
+        }
+        videosToSort.sort(Comparator.comparingDouble(Video::getAverageRating)
+                                    .thenComparing(Video::getTitle));
+        searchMessage.append('[');
+        for (int i = 0; i < videosToSort.size() - 1; ++i) {
+            searchMessage.append(videosToSort.get(i).getTitle());
+            searchMessage.append(", ");
+        }
+        searchMessage.append(videosToSort.get(videosToSort.size() - 1).getTitle());
+        searchMessage.append(']');
+        return searchMessage.toString();
     }
 }

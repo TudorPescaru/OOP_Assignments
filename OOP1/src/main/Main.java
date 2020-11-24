@@ -160,6 +160,35 @@ public final class Main {
                     }
                     break;
                 case "recommendation":
+                    switch (action.getType()) {
+                        case "standard":
+                            String standardMessage = database.recommendStandard(action);
+                            resultObject = fileWriter.writeFile(action.getActionId(),
+                                                        "", standardMessage);
+                            break;
+                        case "best_unseen":
+                            String bestMessage = database.recommendBestUnseen(action);
+                            resultObject = fileWriter.writeFile(action.getActionId(),
+                                                        "", bestMessage);
+                            break;
+                        case "popular":
+                            String popularMessage = database.recommendPopular(action);
+                            resultObject = fileWriter.writeFile(action.getActionId(),
+                                                        "", popularMessage);
+                            break;
+                        case "favorite":
+                            String favoriteMessage = database.recommendFavorite(action);
+                            resultObject = fileWriter.writeFile(action.getActionId(),
+                                                        "", favoriteMessage);
+                            break;
+                        case "search":
+                            String searchMessage = database.recommendSearch(action);
+                            resultObject = fileWriter.writeFile(action.getActionId(),
+                                                        "", searchMessage);
+                            break;
+                        default:
+                            break;
+                    }
                     break;
                 default:
                     break;

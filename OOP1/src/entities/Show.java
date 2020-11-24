@@ -72,35 +72,46 @@ public final class Show extends Video {
     }
 
     protected void addSeasonRating(final int seasonNumber, final Double rating) {
+        // Get season from show based on season number
         Season season = this.seasons.get(seasonNumber);
+        // Check if season exists
         if (season == null) {
             return;
         }
+        // Get list of season ratings and update it
         List<Double> seasonRatings = season.getRatings();
         seasonRatings.add(rating);
         season.setRatings(seasonRatings);
+        // Update list of season average ratings
         this.updateSeasonAverageRatings(seasonNumber);
     }
 
     private void updateSeasonAverageRatings(final int seasonNumber) {
+        // Get season for show based on season number
         Season season = this.seasons.get(seasonNumber);
+        // Get list of ratings for season
         List<Double> seasonRatings = season.getRatings();
+        // Check if season has been rated
         if (seasonRatings.size() == 0) {
             return;
         }
+        // Calculate average rating for season
         Double ratingSum = 0.0;
         for (Double rating : seasonRatings) {
             ratingSum += rating;
         }
+        // Update average rating for given season in list of average seasons
         Double seasonAverageRating = ratingSum / seasonRatings.size();
         this.seasonAverageRatings.set(seasonNumber, seasonAverageRating);
         this.updateAverageRating();
     }
 
     private void updateAverageRating() {
+        // Check if seasons have average ratings
         if (this.seasonAverageRatings.size() == 0) {
             return;
         }
+        // Calculate the average rating for the entire show
         Double ratingSum = 0.0;
         for (Double rating : this.seasonAverageRatings) {
             ratingSum += rating;

@@ -79,10 +79,13 @@ public final class User {
      * @return error or success message
      */
     public String favoriteVideo(final Video toFavorite) {
+        // Check if given video exists
         if (toFavorite == null) {
             return "error -> Video is non existent";
         }
+        // Check if video has been viewed
         if (this.history.containsKey(toFavorite)) {
+            // Check if video is not already in favorites
             if (!this.favorites.contains(toFavorite)) {
                 this.favorites.add(toFavorite);
                 return "success -> " + toFavorite.getTitle() + " was added as favourite";
@@ -101,9 +104,11 @@ public final class User {
      * @return error or success message
      */
     public String viewVideo(final Video toView) {
+        // Check if given video exists
         if (toView == null) {
             return "error -> Video is non existent";
         }
+        // Check if video has not been viewed
         if (this.history.containsKey(toView)) {
             this.history.put(toView, this.history.get(toView) + 1);
             return "success -> " + toView.getTitle() + " was viewed with total views of "
@@ -121,11 +126,13 @@ public final class User {
      * @return error or success message
      */
     public String rateVideo(final Movie toRate, final Double rating) {
+        // Check if given movie exists
         if (toRate == null) {
             return "error -> Movie is null";
         }
+        // Check if movie has been viewed
         if (this.history.containsKey(toRate)) {
-
+            // Check if video is not already rated
             if (!this.ratedMovies.contains(toRate)) {
                 this.ratedMovies.add(toRate);
                 toRate.addRating(rating);
@@ -147,11 +154,15 @@ public final class User {
      * @return error or success message
      */
     public String rateVideo(final Show toRate, final int seasonNumber, final Double rating) {
+        // Check if given show exists
         if (toRate == null) {
             return "error -> Show is null";
         }
+        // Check if show has been viewed
         if (this.history.containsKey(toRate)) {
+            // Get season from show based on season number
             Season seasonToRate = toRate.getSeasons().get(seasonNumber - 1);
+            // Check if season is not already rated
             if (!this.ratedShows.contains(seasonToRate)) {
                 this.ratedShows.add(seasonToRate);
                 toRate.addSeasonRating(seasonNumber - 1, rating);

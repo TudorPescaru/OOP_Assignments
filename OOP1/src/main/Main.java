@@ -74,14 +74,19 @@ public final class Main {
         Writer fileWriter = new Writer(filePath2);
         JSONArray arrayResult = new JSONArray();
 
+        // Instantiate database singleton, give it the input and convert it to usable objects
         Database database = Database.getInstance();
         database.setInput(input);
         database.convertInput();
 
+        // Iterate over actions in input and perform them
         for (ActionInputData action : input.getCommands()) {
+            // Initialize resulting JSONObject for current action
             JSONObject resultObject = null;
+            // Check action type
             switch (action.getActionType()) {
                 case "command":
+                    // Check command type
                     switch (action.getType()) {
                         case "view":
                             String viewMessage = database.userViewVideo(action);
@@ -103,8 +108,10 @@ public final class Main {
                     }
                     break;
                 case "query":
+                    // Check type of object the query will be performed on
                     switch (action.getObjectType()) {
                         case "actors":
+                            // Get main query criteria
                             switch (action.getCriteria()) {
                                 case "average":
                                     String averageMessage = database.queryAverageActors(action);
@@ -125,6 +132,7 @@ public final class Main {
                                     break;
                             }
                         case "movies": case "shows":
+                            // Get main query criteria
                             switch (action.getCriteria()) {
                                 case "ratings":
                                     String ratingsMessage = database.queryRatingVideo(action);
@@ -160,6 +168,7 @@ public final class Main {
                     }
                     break;
                 case "recommendation":
+                    // Get type of recommendation strategy to be applied
                     switch (action.getType()) {
                         case "standard":
                             String standardMessage = database.recommendStandard(action);
@@ -193,6 +202,7 @@ public final class Main {
                 default:
                     break;
             }
+            // Add the resulting object to the output JSONArray
             if (resultObject != null) {
                 arrayResult.add(resultObject);
             }

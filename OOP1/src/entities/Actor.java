@@ -71,21 +71,15 @@ public final class Actor {
     public Double getFilmographyAverageRating() {
         double ratingSum = 0.0;
         int ratingsNotZero = 0;
+        // Iterate over video objects in filmography list
         for (Video video : this.filmography) {
-            if (video instanceof Movie) {
-                Movie movie = (Movie) video;
-                if (movie.getAverageRating() != 0.0) {
-                    ratingSum += movie.getAverageRating();
-                    ratingsNotZero++;
-                }
-            } else if (video instanceof Show) {
-                Show show = (Show) video;
-                if (show.getAverageRating() != 0.0) {
-                    ratingSum += show.getAverageRating();
-                    ratingsNotZero++;
-                }
+            // If video average is not 0 add it to sum and count video
+            if (Double.compare(video.getAverageRating(), 0.0) != 0) {
+                ratingSum += video.getAverageRating();
+                ratingsNotZero++;
             }
         }
+        // Return average of video averages
         return ratingSum / ratingsNotZero;
     }
 }

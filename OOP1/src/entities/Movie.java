@@ -45,14 +45,17 @@ public final class Movie extends Video {
     }
 
     protected void addRating(final Double rating) {
+        // Add given rating to list of ratings and update average rating
         this.ratings.add(rating);
         this.updateAverageRating();
     }
 
     private void updateAverageRating() {
+        // Check if any rating has been given
         if (this.ratings.size() == 0) {
             return;
         }
+        // Iterate over ratings and calculate average rating
         Double ratingSum = 0.0;
         for (Double rating : this.ratings) {
             ratingSum += rating;

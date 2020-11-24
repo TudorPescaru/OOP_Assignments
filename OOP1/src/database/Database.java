@@ -16,6 +16,8 @@ import utils.Utils;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Collections;
@@ -31,15 +33,15 @@ public final class Database {
     /**
      * Map of actor objects in database
      */
-    private Map<String, Actor> actorsMap = new LinkedHashMap<>();
+    private final Map<String, Actor> actorsMap = new LinkedHashMap<>();
     /**
      * Map of video objects in database
      */
-    private Map<String, Video> videosMap = new LinkedHashMap<>();
+    private final Map<String, Video> videosMap = new LinkedHashMap<>();
     /**
      * Map of user objects in database
      */
-    private Map<String, User> usersMap = new LinkedHashMap<>();
+    private final Map<String, User> usersMap = new LinkedHashMap<>();
 
     private Database() {
     }
@@ -140,7 +142,7 @@ public final class Database {
     }
 
     /**
-     * Performs the action of favoriting a video for a certain user
+     * Performs the action of adding a video to favorites list for a certain user
      * @param action details of action to be performed
      * @return success or failure message corresponding to action
      */
@@ -527,10 +529,7 @@ public final class Database {
         if (action.getObjectType().equals("movies") && video instanceof Show) {
             return true;
         }
-        if (action.getObjectType().equals("shows") && video instanceof Movie) {
-            return true;
-        }
-        return false;
+        return action.getObjectType().equals("shows") && video instanceof Movie;
     }
 
     /**
@@ -672,18 +671,6 @@ public final class Database {
             }
         }
         Map<Genre, Integer> genresToViews = new LinkedHashMap<>();
-//        for (Genre genre : Genre.values()) {
-//            for (Video video : videosMap.values()) {
-//                if (videosToViews.containsKey(video)) {
-//                    if (genresToViews.containsKey(genre)) {
-//                        genresToViews.put(genre, genresToViews.get(genre)
-//                                                    + videosToViews.get(video));
-//                    } else {
-//                        genresToViews.put(genre, videosToViews.get(video));
-//                    }
-//                }
-//            }
-//        }
         for (Video video : videosMap.values()) {
             for (Genre genre : video.getGenres()) {
                 if (videosToViews.containsKey(video)) {
@@ -723,7 +710,7 @@ public final class Database {
     }
 
     /**
-     * Retrieves a recommended video based on most favorited unseen videos
+     * Retrieves a recommended video based on most times found in favorites list of unseen videos
      * @param action details of action to be performed
      * @return success or failure message corresponding to action
      */
@@ -754,12 +741,19 @@ public final class Database {
                 }
             }
         }
-        Video mostFavorited = videosToFavorites.entrySet()
+         Optional<Entry<Video, Integer>> maxEntry = videosToFavorites.entrySet()
                                                 .stream()
-                                                .max(Comparator.comparingInt(Map.Entry::getValue))
-                                                .get().getKey();
-        favoriteMessage.append(mostFavorited.getTitle());
-        return favoriteMessage.toString();
+                                                .max(Comparator.comparingInt(Map.Entry::getValue));
+        Video mostFavored = null;
+        if (maxEntry.isPresent()) {
+            mostFavored = maxEntry.get().getKey();
+        }
+        if (mostFavored != null) {
+            favoriteMessage.append(mostFavored.getTitle());
+            return favoriteMessage.toString();
+        } else {
+            return "FavoriteRecommendation cannot be applied!";
+        }
     }
 
     /**

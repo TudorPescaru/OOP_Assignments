@@ -20,19 +20,19 @@ public final class User {
     /**
      * User's list of viewed movies and tv shows alongside number of views
      */
-    private Map<Video, Integer> history;
+    private final Map<Video, Integer> history;
     /**
      * User's list of favorite movies and tv shows
      */
-    private ArrayList<Video> favorites;
+    private final ArrayList<Video> favorites;
     /**
      * User's list of rated movies
      */
-    private ArrayList<Movie> ratedMovies;
+    private final ArrayList<Movie> ratedMovies;
     /**
      * User's list of rated shows
      */
-    private ArrayList<Season> ratedShows;
+    private final ArrayList<Season> ratedShows;
 
     public User(final String username, final String subscriptionType,
                 final Map<Video, Integer> history,
@@ -128,7 +128,7 @@ public final class User {
 
             if (!this.ratedMovies.contains(toRate)) {
                 this.ratedMovies.add(toRate);
-                toRate.addRatind(rating);
+                toRate.addRating(rating);
                 return "success -> " + toRate.getTitle() + " was rated with " + rating + " by "
                         + this.username;
             } else {

@@ -69,7 +69,7 @@ public final class Actor {
      * @return average rating of filmography
      */
     public Double getFilmographyAverageRating() {
-        Double ratingSum = 0.0;
+        double ratingSum = 0.0;
         int ratingsNotZero = 0;
         for (Video video : this.filmography) {
             if (video instanceof Movie) {

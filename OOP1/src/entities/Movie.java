@@ -15,7 +15,7 @@ public final class Movie extends Video {
     /**
      * Movie's list of ratings
      */
-    private ArrayList<Double> ratings;
+    private final ArrayList<Double> ratings;
     /**
      * Movie's average rating
      */
@@ -44,7 +44,7 @@ public final class Movie extends Video {
         return averageRating;
     }
 
-    protected void addRatind(final Double rating) {
+    protected void addRating(final Double rating) {
         this.ratings.add(rating);
         this.updateAverageRating();
     }

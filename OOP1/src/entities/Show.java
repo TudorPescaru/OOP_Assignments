@@ -21,7 +21,7 @@ public final class Show extends Video {
     /**
      * Show's list of average ratings for each season
      */
-    private ArrayList<Double> seasonAverageRatings;
+    private final ArrayList<Double> seasonAverageRatings;
     /**
      * Show's overall average rating
      */
@@ -29,7 +29,7 @@ public final class Show extends Video {
     /**
      * Show's total duration
      */
-    private int duration;
+    private final int duration;
 
     public Show(final String title, final int year,
                 final ArrayList<String> cast, final ArrayList<Genre> genres,

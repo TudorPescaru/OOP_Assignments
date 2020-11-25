@@ -1,1 +1,93 @@
 2020 Pescaru Tudor-Mihai 321CA
+
+Github: https://github.com/TudorPescaru/OOP_Assignments/tree/main/OOP1
+
+Componente
+
+Componentele implementate si utilizate in realizarea acestei teme au fost
+separate in doua pachete diferite: "entities" si "database".
+
+Entities: acest pachet contine implementarile pentru clsele ce definesc
+principalele entitati ce descriu compozitia temei. Aceste entitati au fost
+implementate in clasele cu nume descriptiv: User, Actor, Video, Movie si Show.
+Clasele Movie si Show mostenesc clasa Video pentru ca obiectele lor sa poata
+fi utilizate in contexte in care este necesara genericitatea dar si pastrand
+atribute specificie pentru movies si shows. Obiectele de tip show contin o
+lista de obiecte de tip season, pentru a putea tine cont de toate elementele
+specifice unui sezon ce ii apartine serialului.
+Obiectele de tip actor contin o lista de obiecte de tip Video, acestea fiind
+de fapt obiecte de tip Movie sau Show, asupra carora a fost aplicata operatia
+de upcasting pentru a putea fi stocate la general, nefiind nevoie de o
+diferentiere. Aceasta lista reprezinta filmografia actorului si a fost
+realizata in asa fel incat sa faciliteze accesul mai usor la infromatiile
+despre filmele sau serialele in care a jucat un actor.
+Obiectele de tip user contin un map al istoricului unui utilizator, avand ca
+si cheie obiecte de tip video si valoare, numarul de vizualizari al fiecarui
+video. Din nou, nu este necesara diferentierea intre obiectele de tip movie si
+show, folosindu-se upcasting. Dupa acelasi principiu se construieste si lista
+de video-uri favorite ale utilizatorului. Un loc in care este necesara
+diferentierea intre filme si seriale este la listele de video-uri carora li
+s-a dat un rating. Obiectele de tip movie sunt stocate intr-o lista de
+ratedMovies, iar cele de tip show sunt stocate intr-o lista de ratedShows ce
+contine obiectele de tip Season ale serialului respectiv, deoarece in cazul
+serialelor se da rating pentru cate un sezon in parte.
+
+Database: acest pachet contine o singura clasa, clasa Database ce este un
+singleton implementat dupa metoda Bill Pugh, aceasta aplicand o metodologie
+on-demand, fiind incarcata in memorie doar in momentul in care este apelata
+metoda getIntsance() si de asemenea este si o implementare thread-safe. Am
+ales pattern-ul Singleton pentru aceasta clasa deoarece ea reprezinta
+prinicpala metoda de stocare a tuturor obiectelor necesare rularii programului
+si deoarece reprezinta back-end-ul ce ruleaza toate comenzile primite, astfel
+fiind necesara o singura instanta globala a acesteia.
+Database-ul preia inputul convertit de la json si il converteste in obiecte de
+fiecare tip ce sunt mai apoi stocate in LinkedHashMap, pentru a pastra ordinea
+de input, ca si valori, cheile fiind numele/username-ul/titlul asociat, pentru
+o complexitate de look-up mai buna.
+
+Design Flow
+
+Implementarea incepe in main, cu instantierea database-ului, apoi preluarea
+input-ului si prelucrarea acestuia pentru a obtine obiectele necesare. Pentru
+fiecare actiune data in input se verifica tipul acesteia si diferite campuri
+aferente printr-o serie de switch-case-uri pentru a determina actiunea pe care
+database-ul va trebui sa o realizeze. Odata determinata actiunea concreta se
+apeleaza metoda corespunzatoare din database, dandu-se acestei metode obiectul
+ce contine informatii despre actiune. Aceasta metoda va returna un mesaj de
+succes, eroare sau ce contine o lista de nume, in cazul query-urilor sau
+recomandarilor de tip search. Acest mesaj este apoi transformat in obiect de
+tip JSON si adaugat la array-ul de raspuns.
+In cadrul database, metodele se impart in 3 categorii, la fel ca si actiunile.
+Acestea sunt de tip user action, query si user recommendation. Metodele ce se
+ocupa de user actions, obtin obiectele de tip user si video ce sunt necesare
+actiunii, din map-urile database-ului. Aceste actiuni sunt realizate apoi
+folosind metodele specifice userului definite in clasa User.
+Actiunile de tip query sunt realizate de metode ce utilizeaza map-urile
+stocate intern in baza de date. Pentru fiecare tip de query exista un map ce
+contine obiecte specifice query-ului, userMap, actorMap si videoMap. Aceste
+map-uri au fost declarate ca LinkedHashMap pentru a pastra ordinea inserarii,
+aceasta fiind necesara la recommendations. Aceste map-uri faciliteaza si o
+complexitate O(1) pentru obtinerea unui anumit obiect necesar actiunii.
+Pentru recommendations au fost definite metode separate pentru fiecare
+strategie de recomandare. Aceste metode se folosesc de un obiect de tip user
+obtinut pe baza username-ului dat ca si cheie in map-ul de useri. Pentru a
+realiza recomandarile sunt folosite elemente ce apartin user-ilor precum
+map-urile de video pentru history sau listele de favorite videos. De aici se
+obtin in mod direct toate atributele aferente unui video pentru a putea fi
+folosite in creearea recomandarilor.
+
+Probleme intampinate
+
+Consider ca anumite parti ale cerintei puteau fi explicate mai bine, astfel
+eliminand nevoia de a cauta prin teste si ref-uri pentru a determina ce
+rezultat ar trebui intors (in cazul comenzilor specifice user-ilor) sau ce
+"edge-cases" apar in cadrul unor actiuni (pentru query-ul pe actori filter
+description, apare cuvantul american si este matched un actor in descrierea
+caruia cuvantul actor apare sub forma de "Irish-american").
+O alta problema ar fi faptul ca nu imi este in totalitate clar ce ar mai
+trebui mentionat in readme pentru a fi mai util, fara a avea o dimensiune prea
+mare, avand in vedere faptul ca tot codul este comentat pentru o mai buna
+intelegere.
+Consider ca tema a fost foarte interesanta si apreciez faptul ca a fost mai
+apropiata de un proiect ce ar putea fi realizat in realitate, in cadrul unei
+companii/startup, fata de majoritatea temelor.

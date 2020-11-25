@@ -73,14 +73,16 @@ public final class Database {
         return usersMap;
     }
 
-    public void setInput(final Input input) {
-        this.input = input;
+    /**
+     * Takes a given input and coverts it to more usable form
+     * @param givenInput input to be converted
+     */
+    public void processInput(final Input givenInput) {
+        this.input = givenInput;
+        this.convertInput();
     }
 
-    /**
-     * Converts elements given in input to more useful objects stored in maps
-     */
-    public void convertInput() {
+    private void convertInput() {
         // Make sure maps are clear before processing new input
         actorsMap.clear();
         videosMap.clear();

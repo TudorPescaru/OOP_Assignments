@@ -76,8 +76,7 @@ public final class Main {
 
         // Instantiate database singleton, give it the input and convert it to usable objects
         Database database = Database.getInstance();
-        database.setInput(input);
-        database.convertInput();
+        database.processInput(input);
 
         // Iterate over actions in input and perform them
         for (ActionInputData action : input.getCommands()) {

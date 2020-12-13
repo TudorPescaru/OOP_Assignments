@@ -120,11 +120,10 @@ public final class Distributor implements Entity {
     }
 
     /**
-     * Remove a contract when it has been fulfilled
-     * @param contract contract to be removed
+     * Remove contracts that have been fulfilled
      */
-    protected void removeContract(final Contract contract) {
-        contracts.remove(contract);
+    protected void removeEndedContracts() {
+        contracts.removeIf(contract -> contract.getContractLength() == 0);
     }
 
     /**
@@ -156,6 +155,7 @@ public final class Distributor implements Entity {
     public void processMonth() {
         int monthlyCost = Utils.getMonthlyCost(infrastructureCost, productionCost,
                                                 contracts.size());
+        removeEndedContracts();
         if (monthlyCost <= budget) {
             budget -= monthlyCost;
         } else {

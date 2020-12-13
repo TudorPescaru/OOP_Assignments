@@ -1,5 +1,6 @@
 package entities;
 
+import database.Database;
 import utils.Utils;
 
 /**
@@ -91,10 +92,18 @@ public final class Consumer implements Entity {
      * Get a new contract for this consumer
      */
     private void getNewContract() {
-        // TODO
-        // visit all distributors
-        // find distributor with lowest rate contract
-        // get contract from that distributor
+        int lowestRate = Integer.MAX_VALUE;
+        Distributor lowestRateDistributor = null;
+        Database database = Database.getInstance();
+        for (Distributor distributor : database.getDistributorsMap().values()) {
+            if (distributor.getContractRate() < lowestRate) {
+                lowestRate = distributor.getContractRate();
+                lowestRateDistributor = distributor;
+            }
+        }
+        if (lowestRateDistributor != null) {
+            contract = lowestRateDistributor.generateContract(id);
+        }
     }
 
     /**
@@ -120,8 +129,5 @@ public final class Consumer implements Entity {
         }
         previousCost = contract.getMonthlyCost();
         contract.decreaseLength();
-        if (contract.getContractLength() == 0) {
-            contract.getDistributor().removeContract(contract);
-        }
     }
 }

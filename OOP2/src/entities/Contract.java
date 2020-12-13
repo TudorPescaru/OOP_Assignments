@@ -55,7 +55,8 @@ public final class Contract {
     @Override
     public String toString() {
         return "Contract{"
-                + "contractLength=" + contractLength
+                + "consumerId=" + consumerId
+                + ", contractLength=" + contractLength
                 + ", monthlyCost=" + monthlyCost
                 + ", distributor=" + distributor
                 + '}';

@@ -1,8 +1,6 @@
+import database.Database;
 import fileio.Input;
 import fileio.InputLoader;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public final class Main {
     private Main() {
@@ -16,6 +14,9 @@ public final class Main {
     public static void main(final String[] args) throws Exception {
         InputLoader inputLoader = new InputLoader(args[0]);
         Input input = inputLoader.readData();
-        List<String> test = new ArrayList<>();
+
+        Database database = Database.getInstance();
+        database.processInput(input);
+        database.runGame();
     }
 }

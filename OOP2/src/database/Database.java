@@ -95,23 +95,11 @@ public final class Database {
      * Run game based on given input
      */
     public void runGame() {
-        /* TODO
-        * run initial round
-        *   compute contract prices
-        *   consumers process month
-        *   distributors process month
-        * for num turns
-        *   make updates
-        *   compute contract prices
-        *   consumers process month
-        *   distributors process month
-        */
         if (checkAllDistributorsBankrupt()) {
             return;
         }
         runRound();
         for (int i = 0; i < input.getNumberOfTurns(); i++) {
-            // System.out.println("Month: " + (i + 1));
             if (checkAllDistributorsBankrupt()) {
                 return;
             }

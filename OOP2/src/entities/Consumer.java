@@ -118,7 +118,7 @@ public final class Consumer implements Entity {
      * Subtract monthly contract rate from current budget
      */
     private void payMonthlyRate() {
-        if (this.hasMissedMonth) {
+        if (hasMissedMonth) {
             int penalty = Utils.getPenaltyPayment(previousCost, contract.getMonthlyCost());
             if (penalty > budget) {
                 isBankrupt = true;

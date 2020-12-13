@@ -124,7 +124,9 @@ public final class Database {
      */
     private void runRound() {
         for (Distributor distributor : distributorsMap.values()) {
-            distributor.calculateContractRate();
+            if (!distributor.isBankrupt()) {
+                distributor.calculateContractRate();
+            }
         }
         for (Consumer consumer : consumersMap.values()) {
             consumer.processMonth();

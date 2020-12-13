@@ -1,4 +1,7 @@
 import database.Database;
+import entities.Consumer;
+import entities.Contract;
+import entities.Distributor;
 import fileio.Input;
 import fileio.InputLoader;
 
@@ -18,5 +21,17 @@ public final class Main {
         Database database = Database.getInstance();
         database.processInput(input);
         database.runGame();
+        for (Consumer consumer : database.getConsumersMap().values()) {
+            System.out.println("Consumer: " + consumer.getId() + " " + consumer.isBankrupt()
+                    + " " + consumer.getBudget());
+        }
+        for (Distributor distributor : database.getDistributorsMap().values()) {
+            System.out.println("Distributor: " + distributor.getId() + " "
+                    + distributor.getBudget() + " " + distributor.isBankrupt());
+            for (Contract contract : distributor.getContracts()) {
+                System.out.println("Contract: " + contract.getConsumer().getId() + " "
+                        + contract.getMonthlyCost() + " " + contract.getContractLength());
+            }
+        }
     }
 }

@@ -41,6 +41,7 @@ public final class Distributor implements Entity {
      * Distributor's list of issued contracts that are currently active
      */
     private final List<Contract> contracts;
+    private int currentContractRate;
 
     public Distributor(final int id, final int contractLength, final int initialBudget,
                        final int initialInfrastructureCost, final int initialProductionCost) {
@@ -86,6 +87,10 @@ public final class Distributor implements Entity {
         return contracts;
     }
 
+    public int getCurrentContractRate() {
+        return currentContractRate;
+    }
+
     /**
      * Updates contract length
      * @param contractLength new contract length
@@ -111,6 +116,21 @@ public final class Distributor implements Entity {
         profit = Utils.getProfit(productionCost);
     }
 
+    @Override
+    public void processMonth() {
+        if (isBankrupt) {
+            return;
+        }
+        decrementContracts();
+        budget -= Utils.getMonthlyCost(infrastructureCost, productionCost,
+                getNumActiveContracts());
+        removeEndedContracts();
+        if (budget < 0) {
+            isBankrupt = true;
+            contracts.clear();
+        }
+    }
+
     /**
      * Take a payment form a consumer
      * @param payment amount payed by consumer
@@ -120,46 +140,57 @@ public final class Distributor implements Entity {
     }
 
     /**
-     * Remove contracts that have been fulfilled
+     * Remove contracts that have been fulfilled or whose consumers are bankrupt
      */
-    protected void removeEndedContracts() {
-        contracts.removeIf(contract -> contract.getContractLength() == 0);
+    private void removeEndedContracts() {
+        contracts.removeIf(contract -> contract.getContractLength() == -1
+                || contract.getConsumer().isBankrupt());
+    }
+
+    /**
+     * Decrement contract length at the end of each month
+     */
+    private void decrementContracts() {
+        for (Contract contract : contracts) {
+            contract.decreaseLength();
+        }
+    }
+
+    /**
+     * Calculate number of contracts which have 0 or higher length
+     * @return number of active contracts
+     */
+    private int getNumActiveContracts() {
+        int num = 0;
+        for (Contract contract : contracts) {
+            if (contract.getContractLength() >= 0) {
+                num++;
+            }
+        }
+        return num;
     }
 
     /**
      * Calculate the monthly rate this distributor can give on contract
-     * @return monthly rate of contract
      */
-    protected int getContractRate() {
-        if (contracts.size() == 0) {
-            return Utils.getFinalPriceNoConsumers(infrastructureCost, productionCost, profit);
-        } else {
-            return Utils.getContractFinalPrice(infrastructureCost, contracts.size(),
+    public void calculateContractRate() {
+        if (getNumActiveContracts() == 0) {
+            currentContractRate =  Utils.getFinalPriceNoConsumers(infrastructureCost,
                     productionCost, profit);
+        } else {
+            currentContractRate =  Utils.getContractFinalPrice(infrastructureCost,
+                    getNumActiveContracts(), productionCost, profit);
         }
     }
 
     /**
      * Creates a contract to be given to a consumer who requests it
-     * @param consumerId id of consumer requesting contract
+     * @param consumer consumer requesting contract
      * @return contract for consumer
      */
-    protected Contract generateContract(final int consumerId) {
-        int contractRate = getContractRate();
-        Contract contract = new Contract(consumerId, contractLength, contractRate, this);
+    protected Contract generateContract(final Consumer consumer) {
+        Contract contract = new Contract(consumer, contractLength, currentContractRate, this);
         contracts.add(contract);
         return contract;
-    }
-
-    @Override
-    public void processMonth() {
-        int monthlyCost = Utils.getMonthlyCost(infrastructureCost, productionCost,
-                                                contracts.size());
-        removeEndedContracts();
-        if (monthlyCost <= budget) {
-            budget -= monthlyCost;
-        } else {
-            isBankrupt = true;
-        }
     }
 }

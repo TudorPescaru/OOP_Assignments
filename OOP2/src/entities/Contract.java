@@ -7,7 +7,7 @@ public final class Contract {
     /**
      * Id of consumer who has accepted this contract
      */
-    private final int consumerId;
+    private final Consumer consumer;
     /**
      * Length of the contract
      */
@@ -21,16 +21,16 @@ public final class Contract {
      */
     private final Distributor distributor;
 
-    public Contract(final int consumerId, final int contractLength, final int monthlyCost,
+    public Contract(final Consumer consumer, final int contractLength, final int monthlyCost,
                     final Distributor distributor) {
-        this.consumerId = consumerId;
+        this.consumer = consumer;
         this.contractLength = contractLength;
         this.monthlyCost = monthlyCost;
         this.distributor = distributor;
     }
 
-    public int getConsumerId() {
-        return consumerId;
+    public Consumer getConsumer() {
+        return consumer;
     }
 
     public int getContractLength() {
@@ -50,15 +50,5 @@ public final class Contract {
      */
     public void decreaseLength() {
         contractLength--;
-    }
-
-    @Override
-    public String toString() {
-        return "Contract{"
-                + "consumerId=" + consumerId
-                + ", contractLength=" + contractLength
-                + ", monthlyCost=" + monthlyCost
-                + ", distributor=" + distributor
-                + '}';
     }
 }

@@ -35,6 +35,10 @@ public final class Consumer implements Entity {
      * Consumer's previously paid monthly contract cost
      */
     private int previousCost;
+    /**
+     * Consumer's previous distributor
+     */
+    private Distributor previousDistributor;
 
     public Consumer(final int id, final int initialBudget, final int monthlyIncome) {
         this.id = id;
@@ -78,6 +82,10 @@ public final class Consumer implements Entity {
         if (contract == null || contract.getContractLength() == 0) {
             getNewContract();
         }
+        if (contract.getDistributor().isBankrupt()) {
+            getNewContract();
+            hasMissedMonth = false;
+        }
         payMonthlyRate();
     }
 
@@ -96,13 +104,13 @@ public final class Consumer implements Entity {
         Distributor lowestRateDistributor = null;
         Database database = Database.getInstance();
         for (Distributor distributor : database.getDistributorsMap().values()) {
-            if (distributor.getContractRate() < lowestRate) {
-                lowestRate = distributor.getContractRate();
+            if (distributor.getCurrentContractRate() < lowestRate && !distributor.isBankrupt()) {
+                lowestRate = distributor.getCurrentContractRate();
                 lowestRateDistributor = distributor;
             }
         }
         if (lowestRateDistributor != null) {
-            contract = lowestRateDistributor.generateContract(id);
+            contract = lowestRateDistributor.generateContract(this);
         }
     }
 
@@ -116,7 +124,12 @@ public final class Consumer implements Entity {
                 isBankrupt = true;
             } else {
                 budget -= penalty;
-                contract.getDistributor().takePayment(penalty);
+                if (previousDistributor == contract.getDistributor()) {
+                    contract.getDistributor().takePayment(penalty);
+                } else {
+                    previousDistributor.takePayment(penalty - contract.getMonthlyCost());
+                    contract.getDistributor().takePayment(contract.getMonthlyCost());
+                }
                 hasMissedMonth = false;
             }
         } else {
@@ -128,6 +141,6 @@ public final class Consumer implements Entity {
             }
         }
         previousCost = contract.getMonthlyCost();
-        contract.decreaseLength();
+        previousDistributor = contract.getDistributor();
     }
 }

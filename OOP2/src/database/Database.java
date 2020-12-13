@@ -1,9 +1,9 @@
 package database;
 
-import entities.Consumer;
-import entities.Distributor;
 import entities.Entity;
 import entities.EntityFactory;
+import entities.Consumer;
+import entities.Distributor;
 import fileio.Input;
 import fileio.ConsumerInputData;
 import fileio.DistributorInputData;
@@ -106,34 +106,47 @@ public final class Database {
         *   consumers process month
         *   distributors process month
         */
+        if (checkAllDistributorsBankrupt()) {
+            return;
+        }
         runRound();
         for (int i = 0; i < input.getNumberOfTurns(); i++) {
+            // System.out.println("Month: " + (i + 1));
+            if (checkAllDistributorsBankrupt()) {
+                return;
+            }
             runRoundWithUpdates(input.getUpdatesData().get(i));
         }
     }
 
+    /**
+     * Perform consumer and distributor monthly actions
+     */
     private void runRound() {
+        for (Distributor distributor : distributorsMap.values()) {
+            distributor.calculateContractRate();
+        }
         for (Consumer consumer : consumersMap.values()) {
             consumer.processMonth();
         }
-//        System.out.println("Consumer: " + consumersMap.get(0).getBudget() + " "
-//                + consumersMap.get(0).isBankrupt());
-//        System.out.println("Consumer: " + consumersMap.get(1).getBudget() + " "
-//                + consumersMap.get(1).isBankrupt());
         for (Distributor distributor : distributorsMap.values()) {
             distributor.processMonth();
         }
-//        System.out.println("Distributor: " + distributorsMap.get(0).getBudget());
-//        if (distributorsMap.get(0).getContracts().size() > 0) {
-//            System.out.println("Contract: " + distributorsMap.get(0).getContracts().get(0));
-//        }
     }
 
+    /**
+     * For rounds that contain updates, first perform updates and then perform operations
+     * @param thisMonthUpdates updates that need to happen this month
+     */
     private void runRoundWithUpdates(final UpdatesInputData thisMonthUpdates) {
         processUpdates(thisMonthUpdates);
         runRound();
     }
 
+    /**
+     * Process the updates given for current month
+     * @param thisMonthUpdates updates to be performed for this month
+     */
     private void processUpdates(final UpdatesInputData thisMonthUpdates) {
         for (ConsumerInputData consumerInputData : thisMonthUpdates.getNewConsumers()) {
             Entity entity = EntityFactory.createEntity(EntityFactory.EntityType.CONSUMER,
@@ -145,8 +158,23 @@ public final class Database {
         }
         for (ChangesInputData changesInputData : thisMonthUpdates.getCostsChanges()) {
             Distributor distributor = distributorsMap.get(changesInputData.getId());
-            distributor.setInfrastructureCost(changesInputData.getInfrastructureCost());
-            distributor.setProductionCost(changesInputData.getProductionCost());
+            if (!distributor.isBankrupt()) {
+                distributor.setInfrastructureCost(changesInputData.getInfrastructureCost());
+                distributor.setProductionCost(changesInputData.getProductionCost());
+            }
         }
+    }
+
+    /**
+     * Check if all distributors are bankrupt
+     * @return T/F if all distributors are bankrupt
+     */
+    private boolean checkAllDistributorsBankrupt() {
+        for (Distributor distributor : distributorsMap.values()) {
+            if (!distributor.isBankrupt()) {
+                return false;
+            }
+        }
+        return true;
     }
 }

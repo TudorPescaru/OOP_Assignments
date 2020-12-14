@@ -1,0 +1,94 @@
+2020 Pescaru Tudor-Mihai 321CA
+
+Componente
+
+fileio:
+Acest pachet contine clasele care vor realiza procesarea si stocarea datelor
+din input si o clasa ce va realiza scrierea output-ului. Aceasta implementare
+a fost inspirata si adaptata din implementarea de la tema si se foloseste de
+biblioteca json.simple. Datele de input sunt procesate de clasa InputLoader si
+sunt stocate intr-un obiect de tip Input ce va contine numarul de runde, datele
+initiale despre consumatori si distribuitori si datele despre update-urile
+lunare. Pentru initial data, datele despre consumatori sunt incarcate in
+obiecte de tip ConsumerInputData iar cele pentru distribuitori in obiecte de
+tip DistributorInputData. Fiecare update lunar este stocat intr-un obiect de
+tip UpdatesInputData ce contine o lista de obiecte ConsumerInputData ce va
+reprezenta consumatorii noi si o liste de obiecte de tip ChangesInputData ce
+vor contine modificarile ce trebuie aduse distribuitorilor. Clasa Writer se
+ocupa de convertirea la json a output-ului si de scrierea in fisierul de output.
+
+utils:
+Acest pachet contine clasele utilitare ce ajuta la realizarea diferitelor
+actiuni din program. Clasa Constants defineste constantele ce sunt folosite in
+parsarea input-ului, scrierea output-ului si in calcularea formulelor
+matematice. Clasa Utils contine metode ce realizeaza calcule pe baza formulelor
+matematice date.
+
+entities:
+Acest pachet contine entitatile ce vor lua parte la simularea jocului. Entitatile
+principale sunt Consumer si Distributor. Acestea sunt generalizate de interfata
+Entitiy ce defineste caracteristica principala a unei entitati participante la
+joc, si aceea de a efectua diferite operatii lunare. Clasa Consumer va modela
+un consumator, plecand de la datele de input, avand metode ce vor realiza
+actiunile specifice consumatorilor. Clasa Distributor va modela un
+distribuitor, plecand de la datele din input, avand metode ce vor realiza
+actiunile specifice distribuitorilor. Clasa Contract modeleaza un contract,
+avand propritatile specifice contractelor dar si legaturi la consumatorul ce
+detine contractul si distribuitorul ce a oferit contractul pentru a facilita
+o interactiune usoara intre consumator si distribuitor. Clasa EntityFactory
+este o implementare a design pattern-ului Factory ce se va ocupa cu creerea de
+obiecte de tip Entity, acestea fiind instantiate drept consumatori sau
+distribuitori si folosindu-se de obiecte de input corespunzatoare.
+
+database:
+Acest pachet contine clasa Database ce reprezinta o implementare a design
+pattern-ului Singleton, folosind principiul de implementare definit de Bill
+Pugh, astfel fiind o implementare eficienta si "thread-safe". Aceasta clasa
+reprezinta nucleul programului deoarece ea realizeaza convertirea input-ului
+in entitati utilizabile, stocarea acestor entitati, rularea efectiva a jocului
+prin procesarea fiecarei runde si realizarea update-urilor lunare.
+
+Design Flow
+
+Implementarea incepe in main, cu creerea unui InputLoader ce va prelua path-ul
+catre fisierul de input si va realiza procesarea acestuia, astfel returnand un
+obiect de tip Input ce va contine tot input-ul parsat. In continuare se va
+folosii instanta bazei de date pentru a prelua acest input si pentru a-l
+convertii in entitatile ce vor fi utilizate in program. Aceste entitati sunt
+creeate folosind EntityFactory si stocate in map-uri, folosind id-ul lor
+drept cheie, pentru a oferii eficienta in accesarea lor. Rularea jocului
+consta in rularea unei runde initiale, in care nu se fac update-uri ci se
+realizeaza restul operatiilor specifice unei runde/luni. Aceste operatii sunt
+reprezentate de updatarea preturilor de contract pentru fiecare distribuitor,
+iterand prin toti distribuitorii din baza de date si apeland metoda interna
+clasei Distributor ce se ocupa cu acest aspect, apoi procesarea lunii curente
+de catre fiecare utilizator din baza de date iar mai apoi procesarea lunii
+curente de catre distribuitori, procesari ce se fac apeland metode interne
+claselor. Pentru procesarea lunii de catre consumatori, acestia isi primesc
+venitul lunar, in cazul in care nu au contract sau contractul a expirat, isi
+aleg un nou contract si isi platesc costurile lunare. De asemenea se verifica
+si daca distribuitorul ce a oferit contractul curent a dat faliment, caz in
+care, se alege alt contract si se sterg eventualele datorii. Pentru plata
+contractului, consumatorii interactioneaza direct cu distribuitorii lor prin
+intermediul legaturilor definite in contract. Procesarea lunii de catre
+distribuitori, inseamna decrementarea duratei ramase pe fiecare dintre
+contractele emise, plata costurilor lunare raportate la numarul de contracte
+active si eliminarea contractelor care au expirat sau a caror consumatori au
+dat faliment. Fiecare distribuitor isi pastreaza in permanenta o lista de
+contracte emise. In final se verifica si daca acesta ajunge la un buget
+negativ, caz in care se declara faliment, iar contractele sunt anulate. Aceste
+procesari se realizeaza doar in cazul in care consumatorul, respectiv
+distribuitorul nu a dat deja faliment. Pentru restul rundelor, inainte de
+realizarea operatiilor descrise se realizeaz si update-urile aferente lunii
+curente. Mai intai se adauga noii consumatori folosind metoda de conversie la
+entitati utilizabile descrisa mai sus si mai apoi se realizeaza update-urile
+la costurile fiecarui distribuitor. Simularea se termina dupa rularea numarului
+de luni date sau in cazul in care toti distribuitorii dau faliment. Clasa Writer
+se ocupa, in final, de preluarea intregului set de date din database si de
+scrierea acestuia in fisierul de output.
+
+Probleme intampinate
+
+Implementarea de factory a fost un pic fortata deoarece entitatile, desi sunt
+inrudite in scopul lor, difera destul de mult ca functionalitate si caracteristici.
+Lungimea contractului nu se modifica in niciun test asa cum este specificat pe OCW.

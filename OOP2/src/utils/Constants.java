@@ -12,6 +12,12 @@ public final class Constants {
     public static final String CONSUMERS = "consumers";
     public static final String ID = "id";
     public static final String INITIALBUDGET = "initialBudget";
+    public static final String ISBANKRUPT = "isBankrupt";
+    public static final String BUDGET = "budget";
+    public static final String CONTRACTS = "contracts";
+    public static final String CONSUMERID = "consumerId";
+    public static final String PRICE = "price";
+    public static final String REMAINEDCONTRACTMONTHS = "remainedContractMonths";
     public static final String MONTHLYINCOME = "monthlyIncome";
     public static final String DISTRIBUTORS = "distributors";
     public static final String CONTRACTLENGTH = "contractLength";

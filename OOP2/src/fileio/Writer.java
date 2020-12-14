@@ -6,6 +6,7 @@ import entities.Contract;
 import entities.Distributor;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import utils.Constants;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -32,11 +33,11 @@ public final class Writer {
         // Get array of json output objects for consumers
         JSONArray jsonConsumers = writeConsumers();
         // Add array for consumers to output object
-        jsonOutput.put("consumers", jsonConsumers);
+        jsonOutput.put(Constants.CONSUMERS, jsonConsumers);
         // Get array of json output objects for distributors
         JSONArray jsonDistributors = writeDistributors();
         // Add array for distributors to output objects
-        jsonOutput.put("distributors", jsonDistributors);
+        jsonOutput.put(Constants.DISTRIBUTORS, jsonDistributors);
         // Write to output file and close
         try {
             file.write(jsonOutput.toJSONString());
@@ -60,9 +61,9 @@ public final class Writer {
         for (Consumer consumer : database.getConsumersMap().values()) {
             JSONObject jsonConsumer = new JSONObject();
 
-            jsonConsumer.put("id", consumer.getId());
-            jsonConsumer.put("isBankrupt", consumer.isBankrupt());
-            jsonConsumer.put("budget", consumer.getBudget());
+            jsonConsumer.put(Constants.ID, consumer.getId());
+            jsonConsumer.put(Constants.ISBANKRUPT, consumer.isBankrupt());
+            jsonConsumer.put(Constants.BUDGET, consumer.getBudget());
 
             jsonConsumers.add(jsonConsumer);
         }
@@ -82,14 +83,14 @@ public final class Writer {
         for (Distributor distributor : database.getDistributorsMap().values()) {
             JSONObject jsonDistributor = new JSONObject();
 
-            jsonDistributor.put("id", distributor.getId());
-            jsonDistributor.put("budget", distributor.getBudget());
-            jsonDistributor.put("isBankrupt", distributor.isBankrupt());
+            jsonDistributor.put(Constants.ID, distributor.getId());
+            jsonDistributor.put(Constants.BUDGET, distributor.getBudget());
+            jsonDistributor.put(Constants.ISBANKRUPT, distributor.isBankrupt());
 
             // Convert distributor's contract objects to json objects
             JSONArray jsonContracts = writeContracts(distributor);
 
-            jsonDistributor.put("contracts", jsonContracts);
+            jsonDistributor.put(Constants.CONTRACTS, jsonContracts);
 
             jsonDistributors.add(jsonDistributor);
         }
@@ -109,9 +110,9 @@ public final class Writer {
         for (Contract contract : distributor.getContracts()) {
             JSONObject jsonContract = new JSONObject();
 
-            jsonContract.put("consumerId", contract.getConsumer().getId());
-            jsonContract.put("price", contract.getMonthlyCost());
-            jsonContract.put("remainedContractMonths", contract.getContractLength());
+            jsonContract.put(Constants.CONSUMERID, contract.getConsumer().getId());
+            jsonContract.put(Constants.PRICE, contract.getMonthlyCost());
+            jsonContract.put(Constants.REMAINEDCONTRACTMONTHS, contract.getContractLength());
 
             jsonContracts.add(jsonContract);
         }

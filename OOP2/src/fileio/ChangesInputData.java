@@ -34,13 +34,4 @@ public final class ChangesInputData {
     public int getProductionCost() {
         return productionCost;
     }
-
-    @Override
-    public String toString() {
-        return "ChangesInputData{"
-                + "id=" + id
-                + ", infrastructureCost=" + infrastructureCost
-                + ", productionCost=" + productionCost
-                + '}';
-    }
 }

@@ -34,13 +34,4 @@ public final class ConsumerInputData {
     public int getMonthlyIncome() {
         return monthlyIncome;
     }
-
-    @Override
-    public String toString() {
-        return "ConsumerInputData{"
-                + "id=" + id
-                + ", initialBudget=" + initialBudget
-                + ", monthlyIncome=" + monthlyIncome
-                + '}';
-    }
 }

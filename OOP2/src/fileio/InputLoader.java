@@ -33,6 +33,7 @@ public final class InputLoader {
      * @return Input-type object containing objects created from input
      */
     public Input readData() {
+        // Instantiate parser and elements which will form the input
         JSONParser jsonParser = new JSONParser();
         int numberOfTurns = 0;
         List<UpdatesInputData> updates = null;
@@ -40,14 +41,21 @@ public final class InputLoader {
         List<DistributorInputData> distributors = new ArrayList<>();
 
         try {
+            // Parse json input file
             JSONObject jsonObject = (JSONObject) jsonParser.parse(new FileReader(inputPath));
+            // Get number of turns
             numberOfTurns = Integer.parseInt(jsonObject.get(Constants.NUMTURNS).toString());
+            // Get initial data
             JSONObject initialData = (JSONObject) jsonObject.get(Constants.INITIALDATA);
+            // Get consumer data from initial data
             JSONArray jsonConsumers = (JSONArray) initialData.get(Constants.CONSUMERS);
+            // Get distributor data from initial data
             JSONArray jsonDistributors = (JSONArray) initialData.get(Constants.DISTRIBUTORS);
 
+            // Check if consumers were given in initial data
             if (jsonConsumers != null) {
                 for (Object jsonConsumer : jsonConsumers) {
+                    // Create consumer input data object from consumer json data
                     consumers.add(new ConsumerInputData(
                             Integer.parseInt(((JSONObject) jsonConsumer)
                                     .get(Constants.ID).toString()),
@@ -61,8 +69,10 @@ public final class InputLoader {
                 System.out.println("NO CONSUMERS GIVEN!");
             }
 
+            // Check if consumers were given in initial data
             if (jsonDistributors != null) {
                 for (Object jsonDistributor : jsonDistributors) {
+                    // Create distributor input data object from distributor json data
                     distributors.add(new DistributorInputData(
                             Integer.parseInt(((JSONObject) jsonDistributor)
                                     .get(Constants.ID).toString()),
@@ -80,8 +90,10 @@ public final class InputLoader {
                 System.out.println("NO DISTRIBUTORS GIVEN!");
             }
 
+            // Get list of monthly update objects
             updates = readUpdates(jsonObject);
 
+            // Set consumer and distributor lists as null to prevent errors
             if (jsonConsumers == null) {
                 consumers = null;
             }
@@ -94,6 +106,7 @@ public final class InputLoader {
             e.printStackTrace();
         }
 
+        // Return new input data object
         return new Input(numberOfTurns, consumers, distributors, updates);
     }
 
@@ -103,21 +116,28 @@ public final class InputLoader {
      * @return list of monthly updates
      */
     public List<UpdatesInputData> readUpdates(final JSONObject jsonObject) {
+        // Initialise list of update data objects
         List<UpdatesInputData> updates = new ArrayList<>();
+        // Get list of json updates
         JSONArray jsonUpdates = (JSONArray) jsonObject.get(Constants.MONTHLYUPDATES);
 
+        // Check if updates were given in initial data
         if (jsonUpdates != null) {
             for (Object jsonIterator : jsonUpdates) {
+                // Initialise lists of new consumers and distributor cost changes for each month
                 List<ConsumerInputData> newConsumers = new ArrayList<>();
                 List<ChangesInputData> costsChanges = new ArrayList<>();
 
+                // Get json data for new consumers and cost changes
                 JSONArray jsonConsumers = (JSONArray) ((JSONObject) jsonIterator)
                         .get(Constants.NEWCONSUMERS);
                 JSONArray jsonChanges = (JSONArray) ((JSONObject) jsonIterator)
                         .get(Constants.COSTSCHANGES);
 
+                // Check if new consumers were given in input data
                 if (jsonConsumers != null) {
                     for (Object jsonConsumer : jsonConsumers) {
+                        // Create consumer data object from json data
                         newConsumers.add(new ConsumerInputData(
                                 Integer.parseInt(((JSONObject) jsonConsumer)
                                         .get(Constants.ID).toString()),
@@ -131,8 +151,10 @@ public final class InputLoader {
                     newConsumers = null;
                 }
 
+                // Check if cost changes were given in input data
                 if (jsonChanges != null) {
                     for (Object jsonChange : jsonChanges) {
+                        // Create cost change object from json data
                         costsChanges.add(new ChangesInputData(
                                 Integer.parseInt(((JSONObject) jsonChange)
                                         .get(Constants.ID).toString()),
@@ -146,6 +168,7 @@ public final class InputLoader {
                     costsChanges = null;
                 }
 
+                // Add updates object to list of updates
                 updates.add(new UpdatesInputData(newConsumers, costsChanges));
             }
         } else {

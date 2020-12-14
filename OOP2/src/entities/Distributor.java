@@ -41,6 +41,9 @@ public final class Distributor implements Entity {
      * Distributor's list of issued contracts that are currently active
      */
     private final List<Contract> contracts;
+    /**
+     * Distributor's contract rate to be offered for current month
+     */
     private int currentContractRate;
 
     public Distributor(final int id, final int contractLength, final int initialBudget,
@@ -113,18 +116,24 @@ public final class Distributor implements Entity {
      */
     public void setProductionCost(final int productionCost) {
         this.productionCost = productionCost;
+        // Recalculate profit for new production cost
         profit = Utils.getProfit(productionCost);
     }
 
     @Override
     public void processMonth() {
+        // Do nothing if bankrupt
         if (isBankrupt) {
             return;
         }
+        // Decrement length of all contracts
         decrementContracts();
+        // Pay monthly costs
         budget -= Utils.getMonthlyCost(infrastructureCost, productionCost,
                 getNumActiveContracts());
+        // Remove contracts that have ended
         removeEndedContracts();
+        // Declare bankruptcy and clear contracts if budget goes negative
         if (budget < 0) {
             isBankrupt = true;
             contracts.clear();
@@ -143,6 +152,8 @@ public final class Distributor implements Entity {
      * Remove contracts that have been fulfilled or whose consumers are bankrupt
      */
     private void removeEndedContracts() {
+        // Remove contracts if remaining months is -1 (instead of 0 to be able to display contracts
+        // that have ended in final round) or if consumer is bankrupt
         contracts.removeIf(contract -> contract.getContractLength() == -1
                 || contract.getConsumer().isBankrupt());
     }
@@ -151,6 +162,7 @@ public final class Distributor implements Entity {
      * Decrement contract length at the end of each month
      */
     private void decrementContracts() {
+        // Decrease number of months remaining on all contracts
         for (Contract contract : contracts) {
             contract.decreaseLength();
         }
@@ -162,6 +174,7 @@ public final class Distributor implements Entity {
      */
     private int getNumActiveContracts() {
         int num = 0;
+        // Get number of contracts with remaining months greater than 0
         for (Contract contract : contracts) {
             if (contract.getContractLength() >= 0) {
                 num++;
@@ -175,9 +188,11 @@ public final class Distributor implements Entity {
      */
     public void calculateContractRate() {
         if (getNumActiveContracts() == 0) {
+            // Calculate using no consumer formula
             currentContractRate =  Utils.getFinalPriceNoConsumers(infrastructureCost,
                     productionCost, profit);
         } else {
+            // Calculate using number of active contracts
             currentContractRate =  Utils.getContractFinalPrice(infrastructureCost,
                     getNumActiveContracts(), productionCost, profit);
         }
@@ -189,6 +204,7 @@ public final class Distributor implements Entity {
      * @return contract for consumer
      */
     protected Contract generateContract(final Consumer consumer) {
+        // Create new contract for given consumer and add to list of contracts
         Contract contract = new Contract(consumer, contractLength, currentContractRate, this);
         contracts.add(contract);
         return contract;

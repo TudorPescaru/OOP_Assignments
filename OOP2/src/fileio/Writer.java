@@ -27,11 +27,17 @@ public final class Writer {
      * Writes output of game simulation to output file and closes it
      */
     public void writeOutput() {
+        // Create json object to be written
         JSONObject jsonOutput = new JSONObject();
+        // Get array of json output objects for consumers
         JSONArray jsonConsumers = writeConsumers();
+        // Add array for consumers to output object
         jsonOutput.put("consumers", jsonConsumers);
+        // Get array of json output objects for distributors
         JSONArray jsonDistributors = writeDistributors();
+        // Add array for distributors to output objects
         jsonOutput.put("distributors", jsonDistributors);
+        // Write to output file and close
         try {
             file.write(jsonOutput.toJSONString());
             file.flush();
@@ -46,9 +52,11 @@ public final class Writer {
      * @return array of json objects containing consumer data
      */
     private JSONArray writeConsumers() {
+        // Create json array for consumers
         JSONArray jsonConsumers = new JSONArray();
         Database database = Database.getInstance();
 
+        // Convert each consumer object to json object
         for (Consumer consumer : database.getConsumersMap().values()) {
             JSONObject jsonConsumer = new JSONObject();
 
@@ -66,9 +74,11 @@ public final class Writer {
      * @return array of json objects containing distributor data
      */
     private JSONArray writeDistributors() {
+        // Create json array for distributors
         JSONArray jsonDistributors = new JSONArray();
         Database database = Database.getInstance();
 
+        // Convert each distributor object to json object
         for (Distributor distributor : database.getDistributorsMap().values()) {
             JSONObject jsonDistributor = new JSONObject();
 
@@ -76,6 +86,7 @@ public final class Writer {
             jsonDistributor.put("budget", distributor.getBudget());
             jsonDistributor.put("isBankrupt", distributor.isBankrupt());
 
+            // Convert distributor's contract objects to json objects
             JSONArray jsonContracts = writeContracts(distributor);
 
             jsonDistributor.put("contracts", jsonContracts);
@@ -91,8 +102,10 @@ public final class Writer {
      * @return array of json objects containing contract data
      */
     private JSONArray writeContracts(final Distributor distributor) {
+        // Create json array for contracts
         JSONArray jsonContracts = new JSONArray();
 
+        // Convert each of the given distributor's contract objects to json objects
         for (Contract contract : distributor.getContracts()) {
             JSONObject jsonContract = new JSONObject();
 

@@ -26,11 +26,13 @@ public final class EntityFactory {
     public static Entity createEntity(final EntityType entityType, final Object inputObject) {
         switch (entityType) {
             case CONSUMER:
+                // Convert input object and create new object
                 ConsumerInputData consumerInputData = (ConsumerInputData) inputObject;
                 return new Consumer(consumerInputData.getId(),
                         consumerInputData.getInitialBudget(),
                         consumerInputData.getMonthlyIncome());
             case DISTRIBUTOR:
+                // Convert input object and create new object
                 DistributorInputData distributorInputData = (DistributorInputData) inputObject;
                 return new Distributor(distributorInputData.getId(),
                         distributorInputData.getContractLength(),

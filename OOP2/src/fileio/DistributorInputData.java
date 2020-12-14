@@ -54,15 +54,4 @@ public final class DistributorInputData {
     public int getInitialProductionCost() {
         return initialProductionCost;
     }
-
-    @Override
-    public String toString() {
-        return "DistributorInputData{"
-                + "id=" + id
-                + ", contractLength=" + contractLength
-                + ", initialBudget=" + initialBudget
-                + ", initialInfrastructureCost=" + initialInfrastructureCost
-                + ", initialProductionCost=" + initialProductionCost
-                + '}';
-    }
 }

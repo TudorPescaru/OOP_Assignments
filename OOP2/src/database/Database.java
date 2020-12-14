@@ -73,6 +73,8 @@ public final class Database {
      * Convert the input given to the database to usable entities
      */
     private void convertInput() {
+        consumersMap.clear();
+        distributorsMap.clear();
         for (ConsumerInputData consumerInputData : input.getConsumerData()) {
             Entity entity = EntityFactory.createEntity(EntityFactory.EntityType.CONSUMER,
                     consumerInputData);

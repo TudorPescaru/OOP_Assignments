@@ -15,7 +15,9 @@ tip DistributorInputData. Fiecare update lunar este stocat intr-un obiect de
 tip UpdatesInputData ce contine o lista de obiecte ConsumerInputData ce va
 reprezenta consumatorii noi si o liste de obiecte de tip ChangesInputData ce
 vor contine modificarile ce trebuie aduse distribuitorilor. Clasa Writer se
-ocupa de convertirea la json a output-ului si de scrierea in fisierul de output.
+ocupa de convertirea la json a output-ului si de scrierea in fisierul de
+output. Aceasta clasa foloseste biblioteca jackson pentru afisa json-ul de
+output in format "pretty".
 
 utils:
 Acest pachet contine clasele utilitare ce ajuta la realizarea diferitelor

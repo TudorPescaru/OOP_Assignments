@@ -13,6 +13,8 @@ import fileio.UpdatesInputData;
 import fileio.DistributorChangesInputData;
 import fileio.ProducerChangesInputData;
 
+import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -142,7 +144,9 @@ public final class Database {
      * Perform actions for initial round
      */
     private void runInitialRound() {
-        for (Distributor distributor : distributorsMap.values()) {
+        ArrayList<Distributor> idSort = new ArrayList<>(distributorsMap.values());
+        idSort.sort(Comparator.comparingInt(Distributor::getId));
+        for (Distributor distributor : idSort) {
             distributor.applyStrategy();
             distributor.calculateProductionCost();
             distributor.calculateContractRate();
@@ -181,6 +185,13 @@ public final class Database {
         for (ProducerChangesInputData change : thisMonthUpdates.getProducerChanges()) {
             Producer producer = producersMap.get(change.getId());
             producer.setEnergyPerDistributor(change.getEnergyPerDistributor());
+        }
+        ArrayList<Distributor> toUpdate = new ArrayList<>(distributorsMap.values());
+        toUpdate.sort(Comparator.comparingInt(Distributor::getId));
+        for (Distributor distributor : toUpdate) {
+            if (distributor.isToUpdate() && !distributor.isBankrupt()) {
+                distributor.performUpdate();
+            }
         }
         for (Producer producer : producersMap.values()) {
             producer.processMonth();

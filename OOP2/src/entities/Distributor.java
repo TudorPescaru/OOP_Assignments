@@ -62,6 +62,10 @@ public final class Distributor implements Entity, Observer {
      * Distributor's list of producers
      */
     private final List<Producer> producers;
+    /**
+     * Distributor's flag which indicates if producers need to be updated
+     */
+    private boolean toUpdate;
 
     public Distributor(final int id, final int contractLength, final int initialBudget,
                        final int initialInfrastructureCost, final int energyNeededKW,
@@ -76,6 +80,7 @@ public final class Distributor implements Entity, Observer {
         this.isBankrupt = false;
         this.contracts = new ArrayList<>();
         this.producers = new ArrayList<>();
+        this.toUpdate = false;
     }
 
     public int getId() {
@@ -122,6 +127,10 @@ public final class Distributor implements Entity, Observer {
         return producers;
     }
 
+    public boolean isToUpdate() {
+        return toUpdate;
+    }
+
     public int getCurrentContractRate() {
         return currentContractRate;
     }
@@ -161,6 +170,10 @@ public final class Distributor implements Entity, Observer {
         if (budget < 0) {
             isBankrupt = true;
             contracts.clear();
+            for (Producer producer : producers) {
+                producer.getDistributors().remove(this);
+            }
+            producers.clear();
         }
     }
 
@@ -263,6 +276,16 @@ public final class Distributor implements Entity, Observer {
 
     @Override
     public void update(Observable o, Object arg) {
+        toUpdate = true;
+    }
+
+    /**
+     * Perform updates if flag is true
+     */
+    public void performUpdate() {
+        if (!toUpdate) {
+            return;
+        }
         applyStrategy();
         calculateProductionCost();
     }

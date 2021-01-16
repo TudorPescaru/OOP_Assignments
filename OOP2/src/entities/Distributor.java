@@ -1,14 +1,19 @@
 package entities;
 
+import strategies.EnergyChoiceStrategy;
+import strategies.EnergyChoiceStrategyFactory;
+import strategies.EnergyChoiceStrategyType;
 import utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 
 /**
  * This class defines the distributor entity
  */
-public final class Distributor implements Entity {
+public final class Distributor implements Entity, Observer {
     /**
      * Distributor's given id
      */
@@ -16,7 +21,7 @@ public final class Distributor implements Entity {
     /**
      * Distributor's current contract length
      */
-    private int contractLength;
+    private final int contractLength;
     /**
      * Distributor's current budget
      */
@@ -25,6 +30,14 @@ public final class Distributor implements Entity {
      * Distributor's current infrastructure cost
      */
     private int infrastructureCost;
+    /**
+     * Distributor's amount of needed energy
+     */
+    private final int energyNeededKW;
+    /**
+     * Distributor's strategy based on which producers are chosen
+     */
+    private final EnergyChoiceStrategy producerStrategy;
     /**
      * Distributor's current production cost
      */
@@ -45,17 +58,24 @@ public final class Distributor implements Entity {
      * Distributor's contract rate to be offered for current month
      */
     private int currentContractRate;
+    /**
+     * Distributor's list of producers
+     */
+    private final List<Producer> producers;
 
     public Distributor(final int id, final int contractLength, final int initialBudget,
-                       final int initialInfrastructureCost, final int initialProductionCost) {
+                       final int initialInfrastructureCost, final int energyNeededKW,
+                       final String producerStrategy) {
         this.id = id;
         this.contractLength = contractLength;
         this.budget = initialBudget;
         this.infrastructureCost = initialInfrastructureCost;
-        this.productionCost = initialProductionCost;
-        this.profit = Utils.getProfit(initialProductionCost);
+        this.energyNeededKW = energyNeededKW;
+        EnergyChoiceStrategyType strategyType = Utils.convertToStrategy(producerStrategy);
+        this.producerStrategy = EnergyChoiceStrategyFactory.createStrategy(strategyType, this);
         this.isBankrupt = false;
         this.contracts = new ArrayList<>();
+        this.producers = new ArrayList<>();
     }
 
     public int getId() {
@@ -74,6 +94,14 @@ public final class Distributor implements Entity {
         return infrastructureCost;
     }
 
+    public int getEnergyNeededKW() {
+        return energyNeededKW;
+    }
+
+    public EnergyChoiceStrategy getProducerStrategy() {
+        return producerStrategy;
+    }
+
     public int getProductionCost() {
         return productionCost;
     }
@@ -90,16 +118,12 @@ public final class Distributor implements Entity {
         return contracts;
     }
 
-    public int getCurrentContractRate() {
-        return currentContractRate;
+    public List<Producer> getProducers() {
+        return producers;
     }
 
-    /**
-     * Updates contract length
-     * @param contractLength new contract length
-     */
-    public void setContractLength(final int contractLength) {
-        this.contractLength = contractLength;
+    public int getCurrentContractRate() {
+        return currentContractRate;
     }
 
     /**
@@ -208,5 +232,38 @@ public final class Distributor implements Entity {
         Contract contract = new Contract(consumer, contractLength, currentContractRate, this);
         contracts.add(contract);
         return contract;
+    }
+
+    /**
+     * Reapplies producer picking strategy
+     */
+    public void applyStrategy() {
+        for (Producer producer : producers) {
+            producer.getDistributors().remove(this);
+        }
+        producers.clear();
+        producerStrategy.pickProducers();
+    }
+
+    /**
+     * Calculates production cost for this round
+     */
+    public void calculateProductionCost() {
+        int[] energy = new int[producers.size()];
+        double[] price = new double[producers.size()];
+        int i = 0, cost;
+        for (Producer producer : producers) {
+            energy[i] = producer.getEnergyPerDistributor();
+            price[i] = producer.getPriceKW();
+            i++;
+        }
+        cost = Utils.getProductionCost(energy, price);
+        setProductionCost(cost);
+    }
+
+    @Override
+    public void update(Observable o, Object arg) {
+        applyStrategy();
+        calculateProductionCost();
     }
 }

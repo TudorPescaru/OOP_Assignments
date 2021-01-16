@@ -2,6 +2,7 @@ package entities;
 
 import fileio.ConsumerInputData;
 import fileio.DistributorInputData;
+import fileio.ProducerInputData;
 
 /**
  * This class defines a factory used to create consumer and distributor objects
@@ -11,7 +12,7 @@ public final class EntityFactory {
      * Available types of entities
      */
     public enum EntityType {
-        CONSUMER, DISTRIBUTOR
+        CONSUMER, DISTRIBUTOR, PRODUCER
     }
 
     private EntityFactory() {
@@ -38,7 +39,14 @@ public final class EntityFactory {
                         distributorInputData.getContractLength(),
                         distributorInputData.getInitialBudget(),
                         distributorInputData.getInitialInfrastructureCost(),
-                        distributorInputData.getInitialProductionCost());
+                        distributorInputData.getEnergyNeededKW(),
+                        distributorInputData.getProducerStrategy());
+            case PRODUCER:
+                // Convert input object and create new object
+                ProducerInputData producerInputData = (ProducerInputData) inputObject;
+                return new Producer(producerInputData.getId(), producerInputData.getEnergyType(),
+                        producerInputData.getMaxDistributors(), producerInputData.getPriceKW(),
+                        producerInputData.getEnergyPerDistributor());
             default:
                 return null;
         }

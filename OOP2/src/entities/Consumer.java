@@ -134,7 +134,15 @@ public final class Consumer implements Entity {
             int penalty = Utils.getPenaltyPayment(previousCost, contract.getMonthlyCost());
             // Declare bankruptcy if penalty cannot be paid
             if (penalty > budget) {
-                isBankrupt = true;
+                // Check if penalty is from another distributor and penalty can be paid
+                if (previousDistributor != contract.getDistributor()
+                        && penalty - contract.getMonthlyCost() <= budget) {
+                    // Pay penalty to old distributor and delay payment to current distributor
+                    budget -= penalty - contract.getMonthlyCost();
+                    previousDistributor.takePayment(penalty - contract.getMonthlyCost());
+                } else {
+                    isBankrupt = true;
+                }
             } else {
                 // Pay penalty
                 budget -= penalty;

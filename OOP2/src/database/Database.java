@@ -4,11 +4,14 @@ import entities.Entity;
 import entities.EntityFactory;
 import entities.Consumer;
 import entities.Distributor;
+import entities.Producer;
 import fileio.Input;
 import fileio.ConsumerInputData;
 import fileio.DistributorInputData;
+import fileio.ProducerInputData;
 import fileio.UpdatesInputData;
-import fileio.ChangesInputData;
+import fileio.DistributorChangesInputData;
+import fileio.ProducerChangesInputData;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -29,6 +32,10 @@ public final class Database {
      * Map of distributor objects in the database
      */
     private final Map<Integer, Distributor> distributorsMap = new LinkedHashMap<>();
+    /**
+     * Map of producer objects in the database
+     */
+    private final Map<Integer, Producer> producersMap = new LinkedHashMap<>();
 
     private Database() {
     }
@@ -60,6 +67,10 @@ public final class Database {
         return distributorsMap;
     }
 
+    public Map<Integer, Producer> getProducersMap() {
+        return producersMap;
+    }
+
     /**
      * Take an input and populate the database with usable entities
      * @param givenInput input to be processed
@@ -76,7 +87,8 @@ public final class Database {
         // Clear current database storage
         consumersMap.clear();
         distributorsMap.clear();
-        // Convert consumer input to consumer usable objects using factory and add them to map
+        producersMap.clear();
+        // Convert consumer input to usable consumer objects using factory and add them to map
         for (ConsumerInputData consumerInputData : input.getConsumerData()) {
             Entity entity = EntityFactory.createEntity(EntityFactory.EntityType.CONSUMER,
                     consumerInputData);
@@ -85,13 +97,22 @@ public final class Database {
                 consumersMap.put(consumer.getId(), consumer);
             }
         }
-        // Convert distributor input to distributor usable objects using factory and add them to map
+        // Convert distributor input to usable distributor objects using factory and add them to map
         for (DistributorInputData distributorInputData : input.getDistributorData()) {
             Entity entity = EntityFactory.createEntity(EntityFactory.EntityType.DISTRIBUTOR,
                     distributorInputData);
             if (entity != null) {
                 Distributor distributor = (Distributor) entity;
                 distributorsMap.put(distributor.getId(), distributor);
+            }
+        }
+        // Convert producer input to usable producer objects using factory and add them to map
+        for (ProducerInputData producerInputData : input.getProducerData()) {
+            Entity entity = EntityFactory.createEntity(EntityFactory.EntityType.PRODUCER,
+                    producerInputData);
+            if (entity != null) {
+                Producer producer = (Producer) entity;
+                producersMap.put(producer.getId(), producer);
             }
         }
     }
@@ -105,7 +126,7 @@ public final class Database {
             return;
         }
         // Run initial round
-        runRound();
+        runInitialRound();
         // Run rounds with updates
         for (int i = 0; i < input.getNumberOfTurns(); i++) {
             // Stop game if all distributors turn bankrupt
@@ -113,14 +134,36 @@ public final class Database {
                 return;
             }
             // Run a round with given updates
-            runRoundWithUpdates(input.getUpdatesData().get(i));
+            runRound(input.getUpdatesData().get(i));
+        }
+    }
+
+    /**
+     * Perform actions for initial round
+     */
+    private void runInitialRound() {
+        for (Distributor distributor : distributorsMap.values()) {
+            distributor.applyStrategy();
+            distributor.calculateProductionCost();
+            distributor.calculateContractRate();
+        }
+        for (Consumer consumer : consumersMap.values()) {
+            consumer.processMonth();
+        }
+        for (Distributor distributor : distributorsMap.values()) {
+            distributor.processMonth();
+        }
+        for (Producer producer : producersMap.values()) {
+            producer.processMonth();
         }
     }
 
     /**
      * Perform consumer and distributor monthly actions
      */
-    private void runRound() {
+    private void runRound(final UpdatesInputData thisMonthUpdates) {
+        // Perform updates
+        processUpdates(thisMonthUpdates);
         // Update distributor contract prices for current month
         for (Distributor distributor : distributorsMap.values()) {
             if (!distributor.isBankrupt()) {
@@ -135,17 +178,13 @@ public final class Database {
         for (Distributor distributor : distributorsMap.values()) {
             distributor.processMonth();
         }
-    }
-
-    /**
-     * For rounds that contain updates, first perform updates and then perform operations
-     * @param thisMonthUpdates updates that need to happen this month
-     */
-    private void runRoundWithUpdates(final UpdatesInputData thisMonthUpdates) {
-        // Perform updates
-        processUpdates(thisMonthUpdates);
-        // Perform normal operations
-        runRound();
+        for (ProducerChangesInputData change : thisMonthUpdates.getProducerChanges()) {
+            Producer producer = producersMap.get(change.getId());
+            producer.setEnergyPerDistributor(change.getEnergyPerDistributor());
+        }
+        for (Producer producer : producersMap.values()) {
+            producer.processMonth();
+        }
     }
 
     /**
@@ -163,11 +202,10 @@ public final class Database {
             }
         }
         // Perform updates on distributor objects accessed through map
-        for (ChangesInputData changesInputData : thisMonthUpdates.getCostsChanges()) {
-            Distributor distributor = distributorsMap.get(changesInputData.getId());
+        for (DistributorChangesInputData change : thisMonthUpdates.getDistributorChanges()) {
+            Distributor distributor = distributorsMap.get(change.getId());
             if (!distributor.isBankrupt()) {
-                distributor.setInfrastructureCost(changesInputData.getInfrastructureCost());
-                distributor.setProductionCost(changesInputData.getProductionCost());
+                distributor.setInfrastructureCost(change.getInfrastructureCost());
             }
         }
     }

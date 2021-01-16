@@ -1,5 +1,8 @@
 package utils;
 
+import entities.EnergyType;
+import strategies.EnergyChoiceStrategyType;
+
 /**
  * This class contains methods used to calculate various elements
  */
@@ -66,5 +69,49 @@ public final class Utils {
     public static int getMonthlyCost(final int infrastructureCost, final int productionCost,
                                      final int numCurrentConsumers) {
         return infrastructureCost + productionCost * numCurrentConsumers;
+    }
+
+    /**
+     * Calculates the production cost of a distributor
+     * @param producerEnergy list of energy counts from selected producers
+     * @param producerPrice list of energy prices from selected producers
+     * @return production cost of a distributor
+     */
+    public static int getProductionCost(final int[] producerEnergy, final double[] producerPrice) {
+        double cost = 0;
+        for (int i = 0; i < producerEnergy.length; i++) {
+            cost += (producerEnergy[i] * producerPrice[i]);
+        }
+        return (int) Math.round(Math.floor(cost / Constants.COSTRATIO));
+    }
+
+    /**
+     * Converts an energy type string to enum form
+     * @param energyType energy type in string form
+     * @return energy type in enum form
+     */
+    public static EnergyType convertToEnergyType(final String energyType) {
+        return switch (energyType) {
+            case "WIND" -> EnergyType.WIND;
+            case "SOLAR" -> EnergyType.SOLAR;
+            case "HYDRO" -> EnergyType.HYDRO;
+            case "COAL" -> EnergyType.COAL;
+            case "NUCLEAR" -> EnergyType.NUCLEAR;
+            default -> null;
+        };
+    }
+
+    /**
+     * Converts strategy type string to enum form
+     * @param producerStrategy strategy type in string form
+     * @return strategy type in enum form
+     */
+    public static EnergyChoiceStrategyType convertToStrategy(final String producerStrategy) {
+        return switch (producerStrategy) {
+            case "GREEN" -> EnergyChoiceStrategyType.GREEN;
+            case "PRICE" -> EnergyChoiceStrategyType.PRICE;
+            case "QUANTITY" -> EnergyChoiceStrategyType.QUANTITY;
+            default -> null;
+        };
     }
 }

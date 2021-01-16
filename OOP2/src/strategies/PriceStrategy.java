@@ -48,7 +48,7 @@ public final class PriceStrategy implements EnergyChoiceStrategy {
             if (needed < 0) {
                 break;
             }
-            if (producer.getDistributors().size() <= producer.getMaxDistributors()) {
+            if (producer.getDistributors().size() < producer.getMaxDistributors()) {
                 needed -= producer.getEnergyPerDistributor();
                 producer.getDistributors().add(distributor);
                 producer.addObserver(distributor);

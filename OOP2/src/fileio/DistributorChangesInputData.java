@@ -1,9 +1,9 @@
 package fileio;
 
 /**
- * This calls contains input data of a cost change during a month
+ * This class contains input data of a distributor change during a month
  */
-public final class ChangesInputData {
+public final class DistributorChangesInputData {
     /**
      * Id of distributor on which cost change is performed
      */
@@ -12,15 +12,10 @@ public final class ChangesInputData {
      * Changed infrastructure cost of distributor
      */
     private final int infrastructureCost;
-    /**
-     * Changed production cost of distributor
-     */
-    private final int productionCost;
 
-    public ChangesInputData(final int id, final int infrastructureCost, final int productionCost) {
+    public DistributorChangesInputData(final int id, final int infrastructureCost) {
         this.id = id;
         this.infrastructureCost = infrastructureCost;
-        this.productionCost = productionCost;
     }
 
     public int getId() {
@@ -29,9 +24,5 @@ public final class ChangesInputData {
 
     public int getInfrastructureCost() {
         return infrastructureCost;
-    }
-
-    public int getProductionCost() {
-        return productionCost;
     }
 }

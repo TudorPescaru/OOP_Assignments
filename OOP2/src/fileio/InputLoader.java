@@ -39,6 +39,7 @@ public final class InputLoader {
         List<UpdatesInputData> updates = null;
         List<ConsumerInputData> consumers = new ArrayList<>();
         List<DistributorInputData> distributors = new ArrayList<>();
+        List<ProducerInputData> producers = new ArrayList<>();
 
         try {
             // Parse json input file
@@ -51,6 +52,8 @@ public final class InputLoader {
             JSONArray jsonConsumers = (JSONArray) initialData.get(Constants.CONSUMERS);
             // Get distributor data from initial data
             JSONArray jsonDistributors = (JSONArray) initialData.get(Constants.DISTRIBUTORS);
+            // Get producer data from initial data
+            JSONArray jsonProducers = (JSONArray) initialData.get(Constants.PRODUCERS);
 
             // Check if consumers were given in initial data
             if (jsonConsumers != null) {
@@ -83,11 +86,33 @@ public final class InputLoader {
                             Integer.parseInt(((JSONObject) jsonDistributor)
                                     .get(Constants.INITIALINFRASTRUCTURECOST).toString()),
                             Integer.parseInt(((JSONObject) jsonDistributor)
-                                    .get(Constants.INITIALPRODUCTIONCOST).toString())
+                                    .get(Constants.ENERGYNEEDEDKW).toString()),
+                            ((JSONObject) jsonDistributor)
+                                    .get(Constants.PRODUCERSTRATEGY).toString()
                     ));
                 }
             } else {
                 System.out.println("NO DISTRIBUTORS GIVEN!");
+            }
+
+            if (jsonProducers != null) {
+                for (Object jsonProducer : jsonProducers) {
+                    // Create distributor input data object from distributor json data
+                    producers.add(new ProducerInputData(
+                            Integer.parseInt(((JSONObject) jsonProducer)
+                                    .get(Constants.ID).toString()),
+                            ((JSONObject) jsonProducer)
+                                    .get(Constants.ENERGYTYPE).toString(),
+                            Integer.parseInt(((JSONObject) jsonProducer)
+                                    .get(Constants.MAXDISTRIBUTORS).toString()),
+                            Double.parseDouble(((JSONObject) jsonProducer)
+                                    .get(Constants.PRICEKW).toString()),
+                            Integer.parseInt(((JSONObject) jsonProducer)
+                                    .get(Constants.ENERGYPERDISTRIBUTOR).toString())
+                    ));
+                }
+            } else {
+                System.out.println("NO PRODUCERS GIVEN!");
             }
 
             // Get list of monthly update objects
@@ -102,12 +127,16 @@ public final class InputLoader {
                 distributors = null;
             }
 
+            if (jsonProducers == null) {
+                producers = null;
+            }
+
         } catch (ParseException | IOException e) {
             e.printStackTrace();
         }
 
         // Return new input data object
-        return new Input(numberOfTurns, consumers, distributors, updates);
+        return new Input(numberOfTurns, consumers, distributors, producers, updates);
     }
 
     /**
@@ -126,13 +155,16 @@ public final class InputLoader {
             for (Object jsonIterator : jsonUpdates) {
                 // Initialise lists of new consumers and distributor cost changes for each month
                 List<ConsumerInputData> newConsumers = new ArrayList<>();
-                List<ChangesInputData> costsChanges = new ArrayList<>();
+                List<DistributorChangesInputData> distributorChanges = new ArrayList<>();
+                List<ProducerChangesInputData> producerChanges = new ArrayList<>();
 
                 // Get json data for new consumers and cost changes
                 JSONArray jsonConsumers = (JSONArray) ((JSONObject) jsonIterator)
                         .get(Constants.NEWCONSUMERS);
-                JSONArray jsonChanges = (JSONArray) ((JSONObject) jsonIterator)
-                        .get(Constants.COSTSCHANGES);
+                JSONArray jsonDistributorChanges = (JSONArray) ((JSONObject) jsonIterator)
+                        .get(Constants.DISTRIBUTORCHANGES);
+                JSONArray jsonProducerChanges = (JSONArray) ((JSONObject) jsonIterator)
+                        .get(Constants.PRODUCERCHANGES);
 
                 // Check if new consumers were given in input data
                 if (jsonConsumers != null) {
@@ -151,25 +183,39 @@ public final class InputLoader {
                     newConsumers = null;
                 }
 
-                // Check if cost changes were given in input data
-                if (jsonChanges != null) {
-                    for (Object jsonChange : jsonChanges) {
+                // Check if distributor changes were given in input data
+                if (jsonDistributorChanges != null) {
+                    for (Object jsonDistributorChange : jsonDistributorChanges) {
                         // Create cost change object from json data
-                        costsChanges.add(new ChangesInputData(
-                                Integer.parseInt(((JSONObject) jsonChange)
+                        distributorChanges.add(new DistributorChangesInputData(
+                                Integer.parseInt(((JSONObject) jsonDistributorChange)
                                         .get(Constants.ID).toString()),
-                                Integer.parseInt(((JSONObject) jsonChange)
-                                        .get(Constants.INFRASTRUCTURECOST).toString()),
-                                Integer.parseInt(((JSONObject) jsonChange)
-                                        .get(Constants.PRODUCTIONCOST).toString())
+                                Integer.parseInt(((JSONObject) jsonDistributorChange)
+                                        .get(Constants.INFRASTRUCTURECOST).toString())
                         ));
                     }
                 } else {
-                    costsChanges = null;
+                    distributorChanges = null;
+                }
+
+                // Check if producer changes were given in input data
+                if (jsonProducerChanges != null) {
+                    for (Object jsonProducerChange : jsonProducerChanges) {
+                        // Create cost change object from json data
+                        producerChanges.add(new ProducerChangesInputData(
+                                Integer.parseInt(((JSONObject) jsonProducerChange)
+                                        .get(Constants.ID).toString()),
+                                Integer.parseInt(((JSONObject) jsonProducerChange)
+                                        .get(Constants.ENERGYPERDISTRIBUTOR).toString())
+                                ));
+                    }
+                } else {
+                    producerChanges = null;
                 }
 
                 // Add updates object to list of updates
-                updates.add(new UpdatesInputData(newConsumers, costsChanges));
+                updates.add(new UpdatesInputData(newConsumers, distributorChanges,
+                                                    producerChanges));
             }
         } else {
             updates = null;

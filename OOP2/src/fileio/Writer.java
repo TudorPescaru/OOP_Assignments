@@ -7,13 +7,15 @@ import database.Database;
 import entities.Consumer;
 import entities.Contract;
 import entities.Distributor;
+import entities.Producer;
 import utils.Constants;
 
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * This class writes simulation results in JSON format to an output file
@@ -42,6 +44,8 @@ public final class Writer {
         List<Map<String, Object>> jsonDistributors = writeDistributors();
         // Add array for distributors to output objects
         jsonOutput.put(Constants.DISTRIBUTORS, jsonDistributors);
+        List<Map<String, Object>> jsonProducers = writeProducers();
+        jsonOutput.put(Constants.ENERGYPRODUCERS, jsonProducers);
         // Write to output file and close
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -88,7 +92,11 @@ public final class Writer {
             Map<String, Object> jsonDistributor = new LinkedHashMap<>();
 
             jsonDistributor.put(Constants.ID, distributor.getId());
+            jsonDistributor.put(Constants.ENERGYNEEDEDKW, distributor.getEnergyNeededKW());
+            jsonDistributor.put(Constants.CONTRACTCOST, distributor.getCurrentContractRate());
             jsonDistributor.put(Constants.BUDGET, distributor.getBudget());
+            jsonDistributor.put(Constants.PRODUCERSTRATEGY, distributor.getProducerStrategy()
+                                                            .getStrategyType().getLabel());
             jsonDistributor.put(Constants.ISBANKRUPT, distributor.isBankrupt());
 
             // Convert distributor's contract objects to json objects
@@ -121,5 +129,42 @@ public final class Writer {
             jsonContracts.add(jsonContract);
         }
         return jsonContracts;
+    }
+
+    private List<Map<String, Object>> writeProducers() {
+        List<Map<String, Object>> jsonProducers = new ArrayList<>();
+        Database database = Database.getInstance();
+
+        for (Producer producer : database.getProducersMap().values()) {
+            Map<String, Object> jsonProducer = new LinkedHashMap<>();
+
+            jsonProducer.put(Constants.ID, producer.getId());
+            jsonProducer.put(Constants.MAXDISTRIBUTORS, producer.getMaxDistributors());
+            jsonProducer.put(Constants.PRICEKW, producer.getPriceKW());
+            jsonProducer.put(Constants.ENERGYTYPE, producer.getEnergyType().getLabel());
+            jsonProducer.put(Constants.ENERGYPERDISTRIBUTOR, producer.getEnergyPerDistributor());
+
+            List<Map<String, Object>> monthlyStats = new ArrayList<>();
+            for (int i = 1; i < producer.getMonthlyStats().size(); i++) {
+                Map<String, Object> stat = new LinkedHashMap<>();
+                ArrayList<Integer> ids = new ArrayList<>();
+
+                for (Distributor distributor : producer.getMonthlyStats().get(i)) {
+                    ids.add(distributor.getId());
+                }
+
+                Collections.sort(ids);
+
+                stat.put(Constants.MONTH, i);
+                stat.put(Constants.DISTRIBUTORSID, ids);
+
+                monthlyStats.add(stat);
+            }
+
+            jsonProducer.put(Constants.MONTHLYSTATS, monthlyStats);
+
+            jsonProducers.add(jsonProducer);
+        }
+        return jsonProducers;
     }
 }

@@ -73,8 +73,8 @@ public final class Utils {
 
     /**
      * Calculates the production cost of a distributor
-     * @param producerEnergy list of energy counts from selected producers
-     * @param producerPrice list of energy prices from selected producers
+     * @param producerEnergy array of energy counts from selected producers
+     * @param producerPrice array of energy prices from selected producers
      * @return production cost of a distributor
      */
     public static int getProductionCost(final int[] producerEnergy, final double[] producerPrice) {

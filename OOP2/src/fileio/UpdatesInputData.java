@@ -15,7 +15,7 @@ public final class UpdatesInputData {
      */
     private final List<DistributorChangesInputData> distributorChanges;
     /**
-     * List of changes made to distributors in this update
+     * List of changes made to producers in this update
      */
     private final List<ProducerChangesInputData> producerChanges;
 

@@ -139,10 +139,6 @@ public final class Distributor implements Entity, Observer {
         this.toUpdate = toUpdate;
     }
 
-    /**
-     * Updates infrastructure cost
-     * @param infrastructureCost new infrastructure cost
-     */
     public void setInfrastructureCost(final int infrastructureCost) {
         this.infrastructureCost = infrastructureCost;
     }
@@ -170,13 +166,17 @@ public final class Distributor implements Entity, Observer {
                 getNumActiveContracts());
         // Remove contracts that have ended
         removeEndedContracts();
-        // Declare bankruptcy and clear contracts if budget goes negative
+        // Declare bankruptcy if budget goes negative
         if (budget < 0) {
             isBankrupt = true;
+            // Clear list of contracts
             contracts.clear();
+            // Remove distributor from producer's lists
             for (Producer producer : producers) {
                 producer.getDistributors().remove(this);
+                producer.deleteObserver(this);
             }
+            // Clear list of producers
             producers.clear();
         }
     }
@@ -255,12 +255,16 @@ public final class Distributor implements Entity, Observer {
      * Reapplies producer picking strategy
      */
     public void applyStrategy() {
+        // Remove this distributor from it's producer's lists
         for (Producer producer : producers) {
             producer.getDistributors().remove(this);
             producer.deleteObserver(this);
         }
+        // Clear list of producers
         producers.clear();
+        // Pick new producers based on strategy
         producerStrategy.pickProducers();
+        // Recalculate production cost
         calculateProductionCost();
     }
 
@@ -268,20 +272,24 @@ public final class Distributor implements Entity, Observer {
      * Calculates production cost for this round
      */
     private void calculateProductionCost() {
+        // Create arrays that will be used by production cost formula
         int[] energy = new int[producers.size()];
         double[] price = new double[producers.size()];
         int i = 0, cost;
+        // Iterate through producers and store their price and quantity in the appropriate array
         for (Producer producer : producers) {
             energy[i] = producer.getEnergyPerDistributor();
             price[i] = producer.getPriceKW();
             i++;
         }
+        // Calculate new production cost using formula and update it and profit
         cost = Utils.getProductionCost(energy, price);
         setProductionCost(cost);
     }
 
     @Override
     public void update(Observable o, Object arg) {
+        // On producer change set producer update flag to true
         toUpdate = true;
     }
 }

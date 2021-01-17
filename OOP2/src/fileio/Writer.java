@@ -44,7 +44,9 @@ public final class Writer {
         List<Map<String, Object>> jsonDistributors = writeDistributors();
         // Add array for distributors to output objects
         jsonOutput.put(Constants.DISTRIBUTORS, jsonDistributors);
+        // Get array of json output objects for producers
         List<Map<String, Object>> jsonProducers = writeProducers();
+        // Add array for producers to output objects
         jsonOutput.put(Constants.ENERGYPRODUCERS, jsonProducers);
         // Write to output file and close
         try {
@@ -131,10 +133,16 @@ public final class Writer {
         return jsonContracts;
     }
 
+    /**
+     * Create array of producer jsons with data from database
+     * @return array of json objects containing distributor data
+     */
     private List<Map<String, Object>> writeProducers() {
+        // Create json array for producers
         List<Map<String, Object>> jsonProducers = new ArrayList<>();
         Database database = Database.getInstance();
 
+        // Convert each distributor object to json object
         for (Producer producer : database.getProducersMap().values()) {
             Map<String, Object> jsonProducer = new LinkedHashMap<>();
 
@@ -144,27 +152,41 @@ public final class Writer {
             jsonProducer.put(Constants.ENERGYTYPE, producer.getEnergyType().getLabel());
             jsonProducer.put(Constants.ENERGYPERDISTRIBUTOR, producer.getEnergyPerDistributor());
 
-            List<Map<String, Object>> monthlyStats = new ArrayList<>();
-            for (int i = 1; i < producer.getMonthlyStats().size(); i++) {
-                Map<String, Object> stat = new LinkedHashMap<>();
-                ArrayList<Integer> ids = new ArrayList<>();
+            // Convert producer's monthly stats to json objects
+            List<Map<String, Object>> jsonMonthlyStats = writeStats(producer);
 
-                for (Distributor distributor : producer.getMonthlyStats().get(i)) {
-                    ids.add(distributor.getId());
-                }
-
-                Collections.sort(ids);
-
-                stat.put(Constants.MONTH, i);
-                stat.put(Constants.DISTRIBUTORSID, ids);
-
-                monthlyStats.add(stat);
-            }
-
-            jsonProducer.put(Constants.MONTHLYSTATS, monthlyStats);
+            jsonProducer.put(Constants.MONTHLYSTATS, jsonMonthlyStats);
 
             jsonProducers.add(jsonProducer);
         }
         return jsonProducers;
+    }
+
+    /**
+     * Create array of monthly stats jsons with data from a producer's monthly stats
+     * @param producer producer whose monthly stats are to be converted to json
+     * @return array of json objects containing monthly stats data
+     */
+    private List<Map<String, Object>> writeStats(final Producer producer) {
+        // Create json array for monthly stats
+        List<Map<String, Object>> jsonMonthlyStats = new ArrayList<>();
+
+        // Convert each of the producer's monthly stats to json objects
+        for (int i = 1; i < producer.getMonthlyStats().size(); i++) {
+            Map<String, Object> stat = new LinkedHashMap<>();
+            ArrayList<Integer> ids = new ArrayList<>();
+
+            for (Distributor distributor : producer.getMonthlyStats().get(i)) {
+                ids.add(distributor.getId());
+            }
+
+            Collections.sort(ids);
+
+            stat.put(Constants.MONTH, i);
+            stat.put(Constants.DISTRIBUTORSID, ids);
+
+            jsonMonthlyStats.add(stat);
+        }
+        return jsonMonthlyStats;
     }
 }

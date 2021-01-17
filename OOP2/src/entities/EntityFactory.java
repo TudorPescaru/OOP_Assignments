@@ -27,13 +27,13 @@ public final class EntityFactory {
     public static Entity createEntity(final EntityType entityType, final Object inputObject) {
         switch (entityType) {
             case CONSUMER:
-                // Convert input object and create new object
+                // Convert input object and create new consumer object
                 ConsumerInputData consumerInputData = (ConsumerInputData) inputObject;
                 return new Consumer(consumerInputData.getId(),
                         consumerInputData.getInitialBudget(),
                         consumerInputData.getMonthlyIncome());
             case DISTRIBUTOR:
-                // Convert input object and create new object
+                // Convert input object and create distributor new object
                 DistributorInputData distributorInputData = (DistributorInputData) inputObject;
                 return new Distributor(distributorInputData.getId(),
                         distributorInputData.getContractLength(),
@@ -42,7 +42,7 @@ public final class EntityFactory {
                         distributorInputData.getEnergyNeededKW(),
                         distributorInputData.getProducerStrategy());
             case PRODUCER:
-                // Convert input object and create new object
+                // Convert input object and create producer new object
                 ProducerInputData producerInputData = (ProducerInputData) inputObject;
                 return new Producer(producerInputData.getId(), producerInputData.getEnergyType(),
                         producerInputData.getMaxDistributors(), producerInputData.getPriceKW(),

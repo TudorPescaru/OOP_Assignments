@@ -72,7 +72,7 @@ public final class InputLoader {
                 System.out.println("NO CONSUMERS GIVEN!");
             }
 
-            // Check if consumers were given in initial data
+            // Check if distributors were given in initial data
             if (jsonDistributors != null) {
                 for (Object jsonDistributor : jsonDistributors) {
                     // Create distributor input data object from distributor json data
@@ -95,6 +95,7 @@ public final class InputLoader {
                 System.out.println("NO DISTRIBUTORS GIVEN!");
             }
 
+            // Check if producers were given in initial data
             if (jsonProducers != null) {
                 for (Object jsonProducer : jsonProducers) {
                     // Create distributor input data object from distributor json data
@@ -118,7 +119,7 @@ public final class InputLoader {
             // Get list of monthly update objects
             updates = readUpdates(jsonObject);
 
-            // Set consumer and distributor lists as null to prevent errors
+            // Set consumer, distributor and producer lists as null to prevent errors
             if (jsonConsumers == null) {
                 consumers = null;
             }
@@ -153,7 +154,7 @@ public final class InputLoader {
         // Check if updates were given in initial data
         if (jsonUpdates != null) {
             for (Object jsonIterator : jsonUpdates) {
-                // Initialise lists of new consumers and distributor cost changes for each month
+                // Initialise lists of new consumers, distributor and producer changes
                 List<ConsumerInputData> newConsumers = new ArrayList<>();
                 List<DistributorChangesInputData> distributorChanges = new ArrayList<>();
                 List<ProducerChangesInputData> producerChanges = new ArrayList<>();
@@ -186,7 +187,7 @@ public final class InputLoader {
                 // Check if distributor changes were given in input data
                 if (jsonDistributorChanges != null) {
                     for (Object jsonDistributorChange : jsonDistributorChanges) {
-                        // Create cost change object from json data
+                        // Create distributor change object from json data
                         distributorChanges.add(new DistributorChangesInputData(
                                 Integer.parseInt(((JSONObject) jsonDistributorChange)
                                         .get(Constants.ID).toString()),
@@ -201,7 +202,7 @@ public final class InputLoader {
                 // Check if producer changes were given in input data
                 if (jsonProducerChanges != null) {
                     for (Object jsonProducerChange : jsonProducerChanges) {
-                        // Create cost change object from json data
+                        // Create producer change object from json data
                         producerChanges.add(new ProducerChangesInputData(
                                 Integer.parseInt(((JSONObject) jsonProducerChange)
                                         .get(Constants.ID).toString()),

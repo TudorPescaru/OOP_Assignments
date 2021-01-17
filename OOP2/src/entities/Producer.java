@@ -74,8 +74,11 @@ public final class Producer extends Observable implements Entity {
      * @param energyPerDistributor new energyPerDistributor value
      */
     public void setEnergyPerDistributor(int energyPerDistributor) {
+        // Set energyPerDistributor to new value
         this.energyPerDistributor = energyPerDistributor;
+        // Set changed state to true
         this.setChanged();
+        // Notify observers that this subject has suffered a modification
         this.notifyObservers();
     }
 
@@ -89,6 +92,7 @@ public final class Producer extends Observable implements Entity {
 
     @Override
     public void processMonth() {
+        // Save list of distributors for this month
         monthlyStats.add(new ArrayList<>(distributors));
     }
 }

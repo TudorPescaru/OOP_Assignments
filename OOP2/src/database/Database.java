@@ -144,30 +144,39 @@ public final class Database {
      * Perform actions for initial round
      */
     private void runInitialRound() {
+        // Sort distributors in order of id
         ArrayList<Distributor> idSort = new ArrayList<>(distributorsMap.values());
         idSort.sort(Comparator.comparingInt(Distributor::getId));
+        // Apply strategy, calculate production cost and contract cost for distributors in id order
         for (Distributor distributor : idSort) {
             if (!distributor.isBankrupt()) {
                 distributor.applyStrategy();
                 distributor.calculateContractRate();
             }
         }
+        // Process month for all consumers
         for (Consumer consumer : consumersMap.values()) {
+            // Collect income, pick distributor for contract, pay distributor
             consumer.processMonth();
         }
+        // Process month for all distributors
         for (Distributor distributor : distributorsMap.values()) {
+            // Pay monthly costs
             distributor.processMonth();
         }
+        // Process month for all producers
         for (Producer producer : producersMap.values()) {
+            // Save list of distributors for this month
             producer.processMonth();
         }
     }
 
     /**
-     * Perform consumer and distributor monthly actions
+     * Run a normal round that has updates
+     * @param thisMonthUpdates updates to be made for current month
      */
     private void runRound(final UpdatesInputData thisMonthUpdates) {
-        // Perform updates
+        // Perform updates for new consumers and distributors
         processUpdates(thisMonthUpdates);
         // Update distributor contract prices for current month
         for (Distributor distributor : distributorsMap.values()) {
@@ -177,20 +186,25 @@ public final class Database {
         }
         // Process month for all consumers
         for (Consumer consumer : consumersMap.values()) {
+            // Collect income, pick distributor for contract, pay distributor
             consumer.processMonth();
         }
         // Process month for all distributors
         for (Distributor distributor : distributorsMap.values()) {
+            // Pay monthly costs
             distributor.processMonth();
         }
+        // Perform updates for producers and reapply strategies for distributors
         processProducerUpdates(thisMonthUpdates);
+        // Process month for all producers
         for (Producer producer : producersMap.values()) {
+            // Save list of distributors for this month
             producer.processMonth();
         }
     }
 
     /**
-     * Process the updates given for current month
+     * Process the consumer and distributor updates given for current month
      * @param thisMonthUpdates updates to be performed for this month
      */
     private void processUpdates(final UpdatesInputData thisMonthUpdates) {
@@ -217,15 +231,19 @@ public final class Database {
      * @param thisMonthUpdates updates to be performed this month
      */
     private void processProducerUpdates(final UpdatesInputData thisMonthUpdates) {
+        // Perform updates on producers and alert their distributors of changes
         for (ProducerChangesInputData change : thisMonthUpdates.getProducerChanges()) {
             Producer producer = producersMap.get(change.getId());
             producer.setEnergyPerDistributor(change.getEnergyPerDistributor());
         }
+        // Sort distributors by id
         ArrayList<Distributor> toUpdate = new ArrayList<>(distributorsMap.values());
         toUpdate.sort(Comparator.comparingInt(Distributor::getId));
+        // Reapply strategy for distributors who require it in id order
         for (Distributor distributor : toUpdate) {
             if (distributor.isToUpdate() && !distributor.isBankrupt()) {
                 distributor.applyStrategy();
+                // Set producer update flag back to false
                 distributor.setToUpdate(false);
             }
         }

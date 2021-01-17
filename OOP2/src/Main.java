@@ -3,14 +3,17 @@ import fileio.Input;
 import fileio.InputLoader;
 import fileio.Writer;
 
+/**
+ * Entry point to the simulation
+ */
 public final class Main {
     private Main() {
     }
 
     /**
-     * Entry point of program
-     * @param args path to input and output files
-     * @throws Exception in case of errors during operation
+     * Main function which reads the input file and starts simulation
+     * @param args input and output files
+     * @throws Exception might error when reading/writing/opening files, parsing JSON
      */
     public static void main(final String[] args) throws Exception {
         // Create input loader and process input form input file

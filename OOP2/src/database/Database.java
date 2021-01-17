@@ -147,9 +147,10 @@ public final class Database {
         ArrayList<Distributor> idSort = new ArrayList<>(distributorsMap.values());
         idSort.sort(Comparator.comparingInt(Distributor::getId));
         for (Distributor distributor : idSort) {
-            distributor.applyStrategy();
-            distributor.calculateProductionCost();
-            distributor.calculateContractRate();
+            if (!distributor.isBankrupt()) {
+                distributor.applyStrategy();
+                distributor.calculateContractRate();
+            }
         }
         for (Consumer consumer : consumersMap.values()) {
             consumer.processMonth();
@@ -182,17 +183,7 @@ public final class Database {
         for (Distributor distributor : distributorsMap.values()) {
             distributor.processMonth();
         }
-        for (ProducerChangesInputData change : thisMonthUpdates.getProducerChanges()) {
-            Producer producer = producersMap.get(change.getId());
-            producer.setEnergyPerDistributor(change.getEnergyPerDistributor());
-        }
-        ArrayList<Distributor> toUpdate = new ArrayList<>(distributorsMap.values());
-        toUpdate.sort(Comparator.comparingInt(Distributor::getId));
-        for (Distributor distributor : toUpdate) {
-            if (distributor.isToUpdate() && !distributor.isBankrupt()) {
-                distributor.performUpdate();
-            }
-        }
+        processProducerUpdates(thisMonthUpdates);
         for (Producer producer : producersMap.values()) {
             producer.processMonth();
         }
@@ -217,6 +208,25 @@ public final class Database {
             Distributor distributor = distributorsMap.get(change.getId());
             if (!distributor.isBankrupt()) {
                 distributor.setInfrastructureCost(change.getInfrastructureCost());
+            }
+        }
+    }
+
+    /**
+     * Process the producer updates for current month and reapply strategies for distributors
+     * @param thisMonthUpdates updates to be performed this month
+     */
+    private void processProducerUpdates(final UpdatesInputData thisMonthUpdates) {
+        for (ProducerChangesInputData change : thisMonthUpdates.getProducerChanges()) {
+            Producer producer = producersMap.get(change.getId());
+            producer.setEnergyPerDistributor(change.getEnergyPerDistributor());
+        }
+        ArrayList<Distributor> toUpdate = new ArrayList<>(distributorsMap.values());
+        toUpdate.sort(Comparator.comparingInt(Distributor::getId));
+        for (Distributor distributor : toUpdate) {
+            if (distributor.isToUpdate() && !distributor.isBankrupt()) {
+                distributor.applyStrategy();
+                distributor.setToUpdate(false);
             }
         }
     }

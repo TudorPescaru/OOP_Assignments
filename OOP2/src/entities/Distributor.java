@@ -135,6 +135,10 @@ public final class Distributor implements Entity, Observer {
         return currentContractRate;
     }
 
+    public void setToUpdate(boolean toUpdate) {
+        this.toUpdate = toUpdate;
+    }
+
     /**
      * Updates infrastructure cost
      * @param infrastructureCost new infrastructure cost
@@ -253,15 +257,17 @@ public final class Distributor implements Entity, Observer {
     public void applyStrategy() {
         for (Producer producer : producers) {
             producer.getDistributors().remove(this);
+            producer.deleteObserver(this);
         }
         producers.clear();
         producerStrategy.pickProducers();
+        calculateProductionCost();
     }
 
     /**
      * Calculates production cost for this round
      */
-    public void calculateProductionCost() {
+    private void calculateProductionCost() {
         int[] energy = new int[producers.size()];
         double[] price = new double[producers.size()];
         int i = 0, cost;
@@ -277,16 +283,5 @@ public final class Distributor implements Entity, Observer {
     @Override
     public void update(Observable o, Object arg) {
         toUpdate = true;
-    }
-
-    /**
-     * Perform updates if flag is true
-     */
-    public void performUpdate() {
-        if (!toUpdate) {
-            return;
-        }
-        applyStrategy();
-        calculateProductionCost();
     }
 }
